@@ -1,7 +1,7 @@
 [global_config]
   borderless = True
 [keybindings]
-  paste = <F1>
+  layout_launcher = None
 [layouts]
   [[default]]
     [[[child1]]]

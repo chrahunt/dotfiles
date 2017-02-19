@@ -21,8 +21,6 @@ set splitright
 "" http://vi.stackexchange.com/questions/631/make-edit-file-use-current-directory-during-explore
 let g:netrw_keepdir=0
 
-set textwidth=75
-
 " quick paste toggle in normal and insert modes
 set pastetoggle=<f5>
 set showmode
@@ -40,18 +38,21 @@ let perl_fold_blocks=1
 " *.ipp files -> cpp
 au BufNewFile,BufRead *.ipp set filetype=cpp
 
+" Fast escape in visual block insert
+set timeoutlen=1000 ttimeoutlen=0
+
 " Plugins
 " junegunn/vim-plug
-call plug#begin('~/.local/share/nvim/plugged')
+"call plug#begin('~/.local/share/nvim/plugged')
 
-Plug 'junegunn/vim-easy-align'
-Plug 'rust-lang/rust.vim'
+"Plug 'junegunn/vim-easy-align'
+"Plug 'rust-lang/rust.vim'
 
-call plug#end()
+"call plug#end()
 
 " vim-easy-align mappings.
 " Start interactive EasyAlign in visual mode (e.g. vipga)
-xmap ga <Plug>(EasyAlign)
+"xmap ga <Plug>(EasyAlign)
 
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
-nmap ga <Plug>(EasyAlign)
+"nmap ga <Plug>(EasyAlign)
