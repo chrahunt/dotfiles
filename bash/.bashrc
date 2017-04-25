@@ -79,6 +79,9 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
+alias g=grep
+alias t=tmux-next
+
 alias ..='cd ..'
 alias ...='cd .. && cd ..'
 alias ....='cd .. && cd .. && cd ..'
@@ -96,3 +99,7 @@ if $(which activate.sh); then
     . $(which activate.sh)
 fi
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+alias xl="vim /var/log/Xorg.0.log"

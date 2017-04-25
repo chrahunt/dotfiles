@@ -1,0 +1,5 @@
+# vi mode
+set editing-mode vi
+set completion-ignore-case on
+set menu-complete-display-prefix on
+set keyseq-timeout 0

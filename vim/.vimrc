@@ -16,7 +16,6 @@ nmap <C-l> <C-w>l
 set splitbelow
 set splitright
 
-
 " Filesystem navigation
 "" let :edit command use current directory when navigating with netrw
 "" http://vi.stackexchange.com/questions/631/make-edit-file-use-current-directory-during-explore
@@ -41,6 +40,9 @@ au BufNewFile,BufRead *.ipp set filetype=cpp
 
 " Fast escape in visual block insert
 set timeoutlen=1000 ttimeoutlen=0
+
+" In case I forget sudo
+cmap w!! w !sudo tee > /dev/null %
 
 " Plugins
 " junegunn/vim-plug
