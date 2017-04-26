@@ -1,0 +1,3 @@
+# Configuration for Haskeline, the command-line library used by ghci
+editMode: Vi
+historyDuplicates: IgnoreConsecutive
