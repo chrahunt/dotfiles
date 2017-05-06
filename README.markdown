@@ -1,9 +1,16 @@
 # dotfiles
 
-Usage:
+Contains configuration files for applications I use regularly.
 
-    stow *
+Uses [GNU Stow](https://www.gnu.org/software/stow/) to deploy into a
+home directory.
 
-Test:
+## usage
 
-    stow -v --simulated *
+Deploy
+
+    make
+
+See files changed
+
+    make test
