@@ -32,18 +32,8 @@ shopt -s checkwinsize
 
 PS1='\[\033[32m\][\u@\h \w]\$\[\033[0m\] '
 
-# If this is an xterm set the title to user@host:dir
-#case "$TERM" in
-#xterm*|rxvt*)
-#    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-#    ;;
-#*)
-#    ;;
-#esac
-
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
     alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
@@ -73,21 +63,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
-set -o vi
-
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-alias g=grep
 alias t=tmux-next
-
-alias ..='cd ..'
-alias ...='cd .. && cd ..'
-alias ....='cd .. && cd .. && cd ..'
-alias .....='cd .. && cd .. && cd .. && cd ..'
-
-export EDITOR=vim
 
 export PATH="$HOME/.rbenv/bin:$PATH"
 eval "$(rbenv init -)"
@@ -101,5 +81,3 @@ fi
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-
-alias xl="vim /var/log/Xorg.0.log"
