@@ -8,6 +8,7 @@ alias ...='cd .. && cd ..'
 alias ....='cd .. && cd .. && cd ..'
 alias .....='cd .. && cd .. && cd .. && cd ..'
 
+# Interactive functions.
 # Re-source profile.
 profile() {
     if [ -d "$HOME/.profile" ]; then

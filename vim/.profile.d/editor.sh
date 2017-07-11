@@ -1,5 +1,5 @@
-if command vim > /dev/null 2>&1; then
+if command_exists vim; then
     export EDITOR=vim
-elif command vi > /dev/null 2>&1; then
+elif command_exists vi; then
     export EDITOR=vi
 fi

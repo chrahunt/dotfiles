@@ -24,6 +24,16 @@ let g:netrw_keepdir=0
 " quick paste toggle in normal and insert modes
 set pastetoggle=<f5>
 set showmode
+" interface with X CLIPBOARD or windows clipboard
+if has("clipboard")
+    if has("win32")
+        set clipboard=unnamed
+    else
+        if has("unix")
+            set clipboard=unnamedplus
+        endif
+    endif
+endif
 
 " Folding
 set foldmethod=syntax
@@ -37,12 +47,22 @@ let perl_fold_blocks=1
 
 " *.ipp files -> cpp
 au BufNewFile,BufRead *.ipp set filetype=cpp
+" 'syslog' is messages, always
+au BufRead syslog set filetype=messages
 
 " Fast escape in visual block insert
 set timeoutlen=1000 ttimeoutlen=0
 
 " In case I forget sudo
 cmap w!! w !sudo tee > /dev/null %
+
+" line
+nmap <C-l> :let @+=expand("%") . ':' . line(".")<CR>
+
+" ctags
+set autochdir
+set tags=tags;
+set csre
 
 " Plugins
 " junegunn/vim-plug
