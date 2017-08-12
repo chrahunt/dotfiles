@@ -10,13 +10,14 @@ alias .....='cd .. && cd .. && cd .. && cd ..'
 
 # Interactive functions.
 # Re-source profile.
-profile() {
-    if [ -d "$HOME/.profile" ]; then
-        . "$HOME/.profile"
-    fi
-}
+alias pr=". ~/.profile"
 
 # Return code.
 rc() {
     echo $?
 }
+
+alias t=tmux
+if which tmux-next >/dev/null 2>&1; then
+    alias tmux=tmux-next
+fi

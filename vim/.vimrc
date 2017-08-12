@@ -64,6 +64,9 @@ set autochdir
 set tags=tags;
 set csre
 
+" compile/run
+autocmd filetype cpp nnoremap <F4> :w <bar> exec '!g++ '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
+
 " Plugins
 " junegunn/vim-plug
 "call plug#begin('~/.local/share/nvim/plugged')
