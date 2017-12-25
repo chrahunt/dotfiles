@@ -67,11 +67,6 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-alias t=tmux-next
-
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
-export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"
 export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/keeagent.socket
 
 # autoenv

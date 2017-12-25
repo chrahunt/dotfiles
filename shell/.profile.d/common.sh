@@ -16,8 +16,3 @@ alias pr=". ~/.profile"
 rc() {
     echo $?
 }
-
-alias t=tmux
-if which tmux-next >/dev/null 2>&1; then
-    alias tmux=tmux-next
-fi
