@@ -1,4 +1,6 @@
 #!/bin/sh
+[ -z "$DEBUG_SHELL" ] || echo "common.sh"
+
 # Common aliases/settings/functions
 set -o vi
 

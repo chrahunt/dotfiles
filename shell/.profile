@@ -1,4 +1,4 @@
-#DEBUG_SHELL=1
+DEBUG_SHELL=1
 # if running bash, include .bashrc
 if [ -n "$BASH_VERSION" ]; then
   if [ -f "$HOME/.bashrc" ]; then

@@ -74,6 +74,12 @@ if $(which activate.sh); then
     . $(which activate.sh)
 fi
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+if [ -d "$HOME/.bashrc.d" ]; then
+  for i in $HOME/.bashrc.d/*.sh; do
+    test ! -z "$DEBUG_SHELL" && echo "Sourcing (bash) $i"
+    if [ -r "$i" ]; then
+      . "$i"
+    fi
+  done
+  unset i
+fi
