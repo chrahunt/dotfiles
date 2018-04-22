@@ -5,20 +5,42 @@ set expandtab
 filetype indent on
 syntax on
 
-" Split-screen
-"" navigation
+let mapleader = "-"
+" for orgmode
+let maplocalleader="-"
+
+autocmd FuncUndefined * exe 'runtime autoload/' . expand('<afile>') . '.vim'
+"# Misc Keybindings
+nnoremap <Enter> i<Enter><Esc>l
+
+"# Syntax highlighting
+map <F10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
+            \ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
+            \ . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<CR>
+" highlights for folds
+hi Folded ctermbg=DarkGrey
+
+"# Split-screen
+"## navigation
 nmap <C-h> <C-w>h
 nmap <C-j> <C-w>j
 nmap <C-k> <C-w>k
 nmap <C-l> <C-w>l
 
-"" open location
-set splitbelow
+"## open location
 set splitright
+set splitbelow
 
-" Filesystem navigation
-"" let :edit command use current directory when navigating with netrw
-"" http://vi.stackexchange.com/questions/631/make-edit-file-use-current-directory-during-explore
+"# Tabs
+"## navigation
+" mapping keycode to unused vim keycode
+" avoids waiting compared to using <Esc>
+nnoremap <Esc>[1;5I :tabnext<CR>
+nnoremap <Esc>[1;6I :tabprevious<CR>
+
+"# Filesystem navigation
+" let :edit command use current directory when navigating with netrw
+" http://vi.stackexchange.com/questions/631/make-edit-file-use-current-directory-during-explore
 let g:netrw_keepdir=0
 
 " quick paste toggle in normal and insert modes
@@ -49,15 +71,16 @@ let perl_fold_blocks=1
 au BufNewFile,BufRead *.ipp set filetype=cpp
 " 'syslog' is messages, always
 au BufRead syslog set filetype=messages
+au BufRead syslog.* set filetype=messages
 
 " Fast escape in visual block insert
 set timeoutlen=1000 ttimeoutlen=0
 
-" In case I forget sudo
+" Force write, prompt for sudo
 cmap w!! w !sudo tee > /dev/null %
 
 " line
-nmap <C-l> :let @+=expand("%") . ':' . line(".")<CR>
+nmap <C-0> :let @+=expand("%") . ':' . line(".")<CR>
 
 " ctags
 set autochdir
@@ -65,20 +88,34 @@ set tags=tags;
 set csre
 
 " compile/run
-autocmd filetype cpp nnoremap <F4> :w <bar> exec '!g++ '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
+autocmd filetype cpp nnoremap <F4> :w <bar> exec '!g++ -std=c++11 -ggdb3 '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
+
+" https://shapeshed.com/vim-templates/
+augroup templates
+    autocmd BufNewFile *.cpp 0r ~/.vim/templates/skeleton.cpp
+augroup END
 
 " Plugins
 " junegunn/vim-plug
-"call plug#begin('~/.local/share/nvim/plugged')
+call plug#begin('~/.local/share/vim/plugged')
 
-"Plug 'junegunn/vim-easy-align'
-"Plug 'rust-lang/rust.vim'
+Plug 'junegunn/vim-easy-align'
+Plug 'rust-lang/rust.vim'
+Plug 'idbrii/AsyncCommand'
+Plug 'tpope/vim-surround'
+Plug 'jceb/vim-orgmode'
+Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer' }
 
-"call plug#end()
+call plug#end()
 
 " vim-easy-align mappings.
 " Start interactive EasyAlign in visual mode (e.g. vipga)
-"xmap ga <Plug>(EasyAlign)
+xmap ga <Plug>(EasyAlign)
 
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
-"nmap ga <Plug>(EasyAlign)
+nmap ga <Plug>(EasyAlign)
+"autocmd filetype cpp nnoremap <F4> :w <bar> exec '!g++ -std=c++11 '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
+
+" Workaround for vim-orgmode requiring the speeddating plugin
+" https://github.com/jceb/vim-orgmode/issues/203
+command -nargs=* -range SpeedDatingFormat

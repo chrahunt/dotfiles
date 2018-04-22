@@ -6,3 +6,5 @@
 .idea
 # Python
 .venv
+# Sourcetrail
+*.srctrl
