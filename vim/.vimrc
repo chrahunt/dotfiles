@@ -82,6 +82,9 @@ cmap w!! w !sudo tee > /dev/null %
 " line
 nmap <C-0> :let @+=expand("%") . ':' . line(".")<CR>
 
+" long wrapped lines
+set display+=lastline
+
 " ctags
 set autochdir
 set tags=tags;
