@@ -1,0 +1,25 @@
+name: sample
+tmux_command: /home/chris/PersonalDocuments/projects/tmux-issues/tmux/tmux
+windows:
+- watchers:
+    root: ~/PersonalDocuments/projects/defly-clone/defly-clone
+    panes:
+    - server-compile:
+      - . .venv/bin/activate
+      - cd server
+      - ./tools/watch.sh clang
+    - docker:
+      - . .venv/bin/activate
+      - cd server
+      - make watch-server
+    - django:
+      - . .venv/bin/activate
+      - cd site/defly2
+      - python manage.py runserver
+    - js-compile:
+      - cd site/defly2/game/static/game
+      - npm run watch
+- investigation:
+    root: ~/PersonalDocuments/projects/defly-clone/defly-clone
+    panes:
+    - cd server

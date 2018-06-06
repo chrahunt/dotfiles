@@ -1,9 +1,9 @@
 #!/bin/sh
 if command_exists tmux-next; then
-    _TMUX_BIN=tmux-next
+    export _TMUX_BIN=tmux-next
     alias t=tmux-next
 elif command_exists tmux; then
-    _TMUX_BIN=tmux
+    export _TMUX_BIN=tmux
     alias t=tmux
 fi
 export TMUX_CONFIG=~/.tmux.conf
