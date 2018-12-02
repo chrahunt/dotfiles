@@ -70,9 +70,9 @@ alias l='ls -CF'
 export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/keeagent.socket
 
 # autoenv
-if $(which activate.sh); then
-    . $(which activate.sh)
-fi
+#if $(which activate.sh); then
+#    . $(which activate.sh)
+#fi
 
 if [ -d "$HOME/.bashrc.d" ]; then
   for i in $HOME/.bashrc.d/*.sh; do

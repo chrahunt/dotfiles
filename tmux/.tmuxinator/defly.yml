@@ -1,9 +1,13 @@
 name: sample
 tmux_command: /home/chris/PersonalDocuments/projects/tmux-issues/tmux/tmux
 windows:
-- watchers:
+- server:
     root: ~/PersonalDocuments/projects/defly-clone/defly-clone
+    layout: main-vertical
     panes:
+    - investigation:
+      - . .venv/bin/activate
+      - cd server
     - server-compile:
       - . .venv/bin/activate
       - cd server
@@ -12,6 +16,9 @@ windows:
       - . .venv/bin/activate
       - cd server
       - make watch-server
+- client:
+    root: ~/PersonalDocuments/projects/defly-clone/defly-clone
+    panes:
     - django:
       - . .venv/bin/activate
       - cd site/defly2

@@ -22,3 +22,5 @@ trustExitCode = false
    pushInsteadOf = kde:
 [url "git@git.kde.org:"]
 	pushInsteadOf = kde:
+[url "ssh://git@heroku.com/"]
+	insteadOf = https://git.heroku.com/

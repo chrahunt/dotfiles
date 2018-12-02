@@ -1,3 +1,14 @@
+" - XDG Directories -----------------------------------------------------------
+if !empty($XDG_CACHE_HOME)
+    let xdg_cache_home=$XDG_CACHE_HOME
+else
+    let xdg_cache_home='$HOME/.cache'
+endif
+set directory=xdg_cache_home.'/vim,~/,/tmp'
+set backupdir=xdg_cache_home.'/vim,~/,/tmp'
+set directory=xdg_cache_home.'/vim,~/,/tmp'
+
+" - General -------------------------------------------------------------------
 set autoindent
 set tabstop=4
 set shiftwidth=4
@@ -5,6 +16,7 @@ set expandtab
 filetype indent on
 syntax on
 
+set hidden
 let mapleader = "-"
 " for orgmode
 let maplocalleader="-"
@@ -91,14 +103,14 @@ set tags=tags;
 set csre
 
 " compile/run
-autocmd filetype cpp nnoremap <F4> :w <bar> exec '!g++ -std=c++11 -ggdb3 '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
+autocmd filetype cpp nnoremap <F4> :w <bar> exec '!g++ -std=c++14 -ggdb3 '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
 
 " https://shapeshed.com/vim-templates/
 augroup templates
     autocmd BufNewFile *.cpp 0r ~/.vim/templates/skeleton.cpp
 augroup END
 
-" Plugins
+" - Plugins -------------------------------------------------------------------
 " junegunn/vim-plug
 call plug#begin('~/.local/share/vim/plugged')
 

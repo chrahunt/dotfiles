@@ -3,3 +3,4 @@ if command_exists vim; then
 elif command_exists vi; then
     export EDITOR=vi
 fi
+alias v="$EDITOR"
