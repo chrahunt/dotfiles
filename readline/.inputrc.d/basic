@@ -1,0 +1,45 @@
+# vi mode
+set editing-mode vi
+
+set completion-ignore-case on
+set menu-complete-display-prefix on
+set keyseq-timeout 0
+set show-mode-in-prompt on
+
+
+"TAB": menu-complete
+# alacritty-specific shift-tab
+"\e[Z": menu-complete-backward
+
+# Apply to all modes/keymaps
+"\C-RR": re-read-init-file
+"\C-Rr": "\C-RRre-read init file\e"
+
+set keymap emacs
+"\C-Rv": vi-editing-mode
+"\C-Rm": vi-movement-mode
+
+$if Bash
+#set colored-stats 1
+set keymap vi
+"\C-x": shell-expand-line
+set keymap vi-insert
+"\C-x": shell-expand-line
+$endif
+
+$if gdb
+$if mode=vi
+# fix gdb TUI-mode keybindings in vi mode
+set keymap vi
+"\ee": emacs-editing-mode
+"\C-xa": tui-switch-mode
+# there's no registered function for switching screens so we
+# switch to emacs mode and execute it there.
+"\C-xo": "\ee\C-xo\C-Rml"
+
+set keymap vi-insert
+"\ee" emacs-editing-mode
+"\C-xa": tui-switch-mode
+"\C-xo": "\ee\C-xo\C-Rv"
+$endif
+$endif
