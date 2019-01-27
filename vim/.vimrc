@@ -2,11 +2,16 @@
 if !empty($XDG_CACHE_HOME)
     let xdg_cache_home=$XDG_CACHE_HOME
 else
-    let xdg_cache_home='$HOME/.cache'
+    let xdg_cache_home=$HOME.'/.cache'
 endif
-set directory=xdg_cache_home.'/vim,~/,/tmp'
-set backupdir=xdg_cache_home.'/vim,~/,/tmp'
-set directory=xdg_cache_home.'/vim,~/,/tmp'
+
+if !isdirectory(xdg_cache_home.'/vim')
+    call mkdir(xdg_cache_home.'/vim', 'p', 0700)
+endif
+
+" '//' ensures uniqueness
+let &directory=xdg_cache_home.'/vim//'
+let &backupdir=xdg_cache_home.'/vim//'
 
 " - General -------------------------------------------------------------------
 set autoindent
@@ -79,11 +84,15 @@ let perl_fold=1
 let perl_nofold_packages=1
 let perl_fold_blocks=1
 
-" *.ipp files -> cpp
+" - Filetypes -----------------------------------------------------------------
+
 au BufNewFile,BufRead *.ipp set filetype=cpp
+
 " 'syslog' is messages, always
 au BufRead syslog set filetype=messages
 au BufRead syslog.* set filetype=messages
+
+au BufRead strace.* set filetype=strace
 
 " Fast escape in visual block insert
 set timeoutlen=1000 ttimeoutlen=0
