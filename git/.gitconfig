@@ -24,3 +24,5 @@ trustExitCode = false
 	pushInsteadOf = kde:
 [url "ssh://git@heroku.com/"]
 	insteadOf = https://git.heroku.com/
+[color]
+	ui = auto

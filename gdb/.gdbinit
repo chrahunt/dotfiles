@@ -1,5 +1,6 @@
 set pagination off
 set prompt \001\033[0;32m\002(gdb) \001\033[0m\002
+add-auto-load-safe-path ~/.pyenv
 python
 import itertools
 import gdb

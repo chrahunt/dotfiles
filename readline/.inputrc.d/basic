@@ -4,7 +4,7 @@ set editing-mode vi
 set completion-ignore-case on
 set menu-complete-display-prefix on
 set keyseq-timeout 0
-set show-mode-in-prompt on
+#set show-mode-in-prompt on
 
 
 "TAB": menu-complete

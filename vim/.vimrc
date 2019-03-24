@@ -1,17 +1,29 @@
 " - XDG Directories -----------------------------------------------------------
 if !empty($XDG_CACHE_HOME)
-    let xdg_cache_home=$XDG_CACHE_HOME
+    let xdg_cache_home=$XDG_CACHE_HOME.'/vim'
 else
-    let xdg_cache_home=$HOME.'/.cache'
+    let xdg_cache_home=$HOME.'/.cache/vim'
 endif
 
-if !isdirectory(xdg_cache_home.'/vim')
-    call mkdir(xdg_cache_home.'/vim', 'p', 0700)
+if !isdirectory(xdg_cache_home)
+    call mkdir(xdg_cache_home, 'p', 0700)
 endif
 
+if !empty($XDG_DATA_HOME)
+    let xdg_data_home=$XDG_DATA_HOME.'/vim'
+else
+    let xdg_data_home=$HOME.'/.local/share/vim'
+endif
+
+if !isdirectory(xdg_data_home)
+    call mkdir(xdg_data_home, 'p', 0700)
+endif
+
+" &option allows string variable usage, set does not.
 " '//' ensures uniqueness
-let &directory=xdg_cache_home.'/vim//'
-let &backupdir=xdg_cache_home.'/vim//'
+let &directory=xdg_cache_home.'//'
+let &backupdir=xdg_cache_home.'//'
+let &viminfo.=',n'.xdg_data_home.'/viminfo'
 
 " - General -------------------------------------------------------------------
 set autoindent
