@@ -1,2 +1,2 @@
 # set prompt
-!(lambda: exec('import gc; import pdb; next(o for o in gc.get_objects() if isinstance(o, pdb.Pdb)).prompt = "\001\033[0;33m\002(pdb)\001\033[0m\002 "', {}))()
+#!(lambda: exec('import gc; import pdb; next(o for o in gc.get_objects() if isinstance(o, pdb.Pdb)).prompt = "\001\033[0;33m\002(pdb)\001\033[0m\002 "', {}))()

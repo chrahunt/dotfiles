@@ -1,0 +1,4 @@
+# Configured per http://www.stuartcarnie.com/2012/06/lldb-vi-mode-and-tab-completion.html
+lldb:bind -v
+lldb:bind ^I lldb_complete
+lldb:bind ^P ed-command

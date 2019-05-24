@@ -26,3 +26,5 @@ trustExitCode = false
 	insteadOf = https://git.heroku.com/
 [color]
 	ui = auto
+[cinnabar]
+	helper = /home/chris/.mozbuild/git-cinnabar/git-cinnabar-helper

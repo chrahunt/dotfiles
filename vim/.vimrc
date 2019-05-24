@@ -112,8 +112,8 @@ set timeoutlen=1000 ttimeoutlen=0
 " Force write, prompt for sudo
 cmap w!! w !sudo tee > /dev/null %
 
-" line
-nmap <C-0> :let @+=expand("%") . ':' . line(".")<CR>
+" Copy file/line to clipboard.
+nnoremap <silent> <C-p> :let @+ = expand("%:p") . ':' . line(".")<CR>
 
 " long wrapped lines
 set display+=lastline
@@ -135,11 +135,12 @@ augroup END
 " junegunn/vim-plug
 call plug#begin('~/.local/share/vim/plugged')
 
+Plug 'idbrii/AsyncCommand'
+Plug 'jceb/vim-orgmode'
 Plug 'junegunn/vim-easy-align'
 Plug 'rust-lang/rust.vim'
-Plug 'idbrii/AsyncCommand'
+Plug 'scrooloose/nerdtree'
 Plug 'tpope/vim-surround'
-Plug 'jceb/vim-orgmode'
 Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer' }
 
 call plug#end()
@@ -155,3 +156,7 @@ nmap ga <Plug>(EasyAlign)
 " Workaround for vim-orgmode requiring the speeddating plugin
 " https://github.com/jceb/vim-orgmode/issues/203
 command -nargs=* -range SpeedDatingFormat
+
+" nerdtree config
+map <C-n> :NERDTreeToggle<CR>
+nmap <C-n> :NERDTreeToggle<CR>

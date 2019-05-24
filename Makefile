@@ -1,6 +1,7 @@
 all: stow
 
 stow:
+	cat */.editrc.d/* > editline/.editrc
 	stow */
 
 unstow:
