@@ -1,30 +1,40 @@
 [user]
 email = chrahunt@gmail.com
 name = Chris Hunt
+
 [core]
 excludesfile = ~/.gitignore_global
+
+[alias]
+co = checkout
+s = status
+
+[color]
+ui = auto
+
 [merge]
 tool = kdiff3
 tool = kdiff3
+
 [diff]
 guitool = kdiff3
 guitool = kdiff3
+
 [mergetool "kdiff3"]
 #path = C:/Program Files/KDiff3/kdiff3.exe
 trustExitCode = false
+
 [difftool "kdiff3"]
 #path = C:/Program Files/KDiff3/kdiff3.exe
 trustExitCode = false
 
 [url "git://anongit.kde.org/"]
-   insteadOf = kde:
+insteadOf = kde:
 [url "ssh://git@git.kde.org/"]
-   pushInsteadOf = kde:
+pushInsteadOf = kde:
 [url "git@git.kde.org:"]
-	pushInsteadOf = kde:
+pushInsteadOf = kde:
 [url "ssh://git@heroku.com/"]
-	insteadOf = https://git.heroku.com/
-[color]
-	ui = auto
+insteadOf = https://git.heroku.com/
 [cinnabar]
-	helper = /home/chris/.mozbuild/git-cinnabar/git-cinnabar-helper
+helper = /home/chris/.mozbuild/git-cinnabar/git-cinnabar-helper
