@@ -38,6 +38,10 @@ let mapleader = "-"
 " for orgmode
 let maplocalleader="-"
 
+" Pipe character without gaps
+let &fillchars = 'vert:' . nr2char(0x2502)
+hi VertSplit cterm=NONE
+
 autocmd FuncUndefined * exe 'runtime autoload/' . expand('<afile>') . '.vim'
 "# Misc Keybindings
 nnoremap <Enter> i<Enter><Esc>l
