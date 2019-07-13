@@ -1,0 +1,7 @@
+# Pieces of .stow-local-ignore
+\.stow-local-ignore\.local
+\.stow-local-ignore\.global
+
+# Repo-specific metadata that may be in each package.
+README\.md
+\.gitignore

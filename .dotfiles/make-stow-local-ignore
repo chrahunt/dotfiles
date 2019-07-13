@@ -1,0 +1,14 @@
+#!/bin/sh
+stow_global_ignore_f="$(mktemp)"
+find . -name ".stow-local-ignore.global" \
+    -exec sh -c 'printf "# %s\n%s\n" "{}" "$(cat "{}")"' \; \
+    > "$stow_global_ignore_f"
+
+for d in */; do
+    cat <<EOF > "$d/.stow-local-ignore"
+# global
+$(cat "$stow_global_ignore_f")
+# local
+$([ -f "$d/.stow-local-ignore.local" ] && cat "$d/.stow-local-ignore.local")
+EOF
+done
