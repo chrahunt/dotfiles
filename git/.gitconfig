@@ -30,6 +30,10 @@ guitool = kdiff3
 guitool = kdiff3
 tool = bc3
 
+[diff "org"]
+# Use header name for diff hunk headers
+xfuncname = "^\\*+ (.*)$"
+
 [mergetool "kdiff3"]
 #path = C:/Program Files/KDiff3/kdiff3.exe
 trustExitCode = false
