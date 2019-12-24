@@ -1,13 +1,22 @@
 [user]
 email = chrahunt@gmail.com
 name = Chris Hunt
+signingkey = 26B8B8717ADE5C75
 
 [core]
 excludesfile = ~/.gitignore_global
 
 [alias]
+c = commit
 co = checkout
 s = status
+d = diff
+rc = "rebase --continue"
+fix = "commit --amend --no-edit"
+fixa = "commit -a --amend --no-edit"
+stash-diff = "!f() { git diff \"stash@{$1}^\" \"stash@{$1}\"; }; f"
+unstage = "reset HEAD --"
+pr = "!f() { git fetch upstream pull/$1/head:pr-$1; }; f"
 
 [color]
 ui = auto
@@ -19,6 +28,7 @@ tool = kdiff3
 [diff]
 guitool = kdiff3
 guitool = kdiff3
+tool = bc3
 
 [mergetool "kdiff3"]
 #path = C:/Program Files/KDiff3/kdiff3.exe
@@ -38,3 +48,5 @@ pushInsteadOf = kde:
 insteadOf = https://git.heroku.com/
 [cinnabar]
 helper = /home/chris/.mozbuild/git-cinnabar/git-cinnabar-helper
+[push]
+default = current
