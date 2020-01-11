@@ -67,8 +67,6 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/keeagent.socket
-
 # autoenv
 #if $(which activate.sh); then
 #    . $(which activate.sh)
