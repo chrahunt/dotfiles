@@ -1,1 +1,1 @@
-path_prepend "$HOME/.cargo.bin"
+path_prepend "$HOME/.cargo/bin"
