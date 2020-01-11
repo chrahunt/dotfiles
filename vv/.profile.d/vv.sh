@@ -13,6 +13,7 @@ vv() {
     fi
     case "$_vv__cmd" in
         activate) vv_activate "$@";;
+        create) vv_create "$@";;
         *) vv_usage "$@";
     esac
     return $?
@@ -56,11 +57,34 @@ vv_activate() {
     return 1
 }
 
+get_python_version() {
+    "$1" -c 'import sys; print(sys.version_info[0])'
+}
+
 vv_create() {
+    # --python
+    if [ "${1#--}" != "$1" ]; then
+        _vv_create__python="$2"
+        shift
+        shift
+    else
+        _vv_create__python="$VV_PYTHON"
+    fi
+
     _vv_create__name="$1"
     shift
+
+    _vv_create__python_version="$(get_python_version "$_vv_create__python")"
+    if [ "$_vv_create__python_version" = "2" ]; then
+        _vv_create__venv=virtualenv
+        _vv_create__prompt="($_vv_create__name) "
+    else
+        _vv_create__venv=venv
+        _vv_create__prompt="$_vv_create__name"
+    fi
+
     _vv_create__tmpdir="$(_vv_get_tmpdir)"
-    "$VV_PYTHON" -m venv --prompt "$_vv_create__name" "$_vv_create__tmpdir"
+    "$_vv_create__python" -m "$_vv_create__venv"  --prompt "$_vv_create__prompt" "$_vv_create__tmpdir"
     echo "$_vv_create__tmpdir"
     return $?
 }
