@@ -1,6 +1,10 @@
+# When used in tmux, pagination is not really worthwhile, so disable it.
 set pagination off
+# Color prompt.
 set prompt \001\033[0;32m\002(gdb) \001\033[0m\002
+# Support loading python-gdb.py by default for pyenv-installed Pythons.
 add-auto-load-safe-path ~/.pyenv
+
 python
 import itertools
 import gdb
