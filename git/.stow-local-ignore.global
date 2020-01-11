@@ -1,1 +1,1 @@
-\.gitignore_global\.d
+^/\.gitignore_global\.d

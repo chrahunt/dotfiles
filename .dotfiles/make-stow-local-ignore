@@ -1,9 +1,20 @@
 #!/bin/sh
+# Stow ignores files matching patterns in .stow-local-ignore in any
+# stow directory.
+
+# We allow any directory to have a .stow-local-ignore.global - if present
+# these will be propagated to the .stow-local-ignore in every directory.
+
+# For declaring things to be ignored locally to a package, use
+# .stow-local-ignore.local.
+
+# Concatenate all .global files into one file.
 stow_global_ignore_f="$(mktemp)"
 find . -name ".stow-local-ignore.global" \
     -exec sh -c 'printf "# %s\n%s\n" "{}" "$(cat "{}")"' \; \
     > "$stow_global_ignore_f"
 
+# Create the actual .stow-local-ignore files in each directory.
 for d in */; do
     cat <<EOF > "$d/.stow-local-ignore"
 # global
