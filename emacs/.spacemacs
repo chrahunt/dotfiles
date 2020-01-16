@@ -578,7 +578,14 @@ before packages are loaded."
                   (princ (format "timeout waiting for xclip, killing it"))
                   (kill-process process)))
               (delete-file filename)))))))
-  )
+
+ ;; Assume that BROWSER has been set and points to an appropriate script.
+ ;; TODO: Make WSL-specific if it breaks native Ubuntu
+ (setq
+   browse-url-generic-program (getenv "BROWSER")
+   browse-url-browser-function 'browse-url-generic)
+
+)
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
