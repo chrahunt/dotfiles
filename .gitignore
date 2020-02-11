@@ -1,1 +1,3 @@
+# Since we generate this from .stow-local-ignore.{local,global} we don't
+# want to track the actual generated files.
 .stow-local-ignore
