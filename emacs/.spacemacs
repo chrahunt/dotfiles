@@ -75,6 +75,10 @@ This function should only modify configuration layer settings."
      ;; - doesn't respect org-hide font face: https://github.com/sabof/org-bullets/pull/19
      ;; - doesn't work when switching theme: https://github.com/syl20bnr/spacemacs/issues/4688
      org-bullets
+     ;; This prevents C-backspace from deleting words when at the beginning of
+     ;; the line (since clean-aindent--inside-indentp is true). I use C-d and <<
+     ;; anyway for dedenting in command/insert mode, so it's not useful.
+     clean-aindent-mode
    )
 
    ;; Defines the behaviour of Spacemacs when installing packages.
@@ -464,7 +468,7 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
 This function is called only while dumping Spacemacs configuration. You can
 `require' or `load' the libraries of your choice that will be included in the
 dump."
-  )
+)
 
 (defun dotspacemacs/user-config ()
   "Configuration for user code:
@@ -472,9 +476,16 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+  ;; OS identifiers
+  ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
+  (when (string-match "-[Mm]icrosoft" operating-system-release)
+    (setq is-wsl t)
+    )
+
   ;; Pull from environment, since I use a different path on different machines.
   (setq org-directory (substitute-in-file-name "${EMACS_ORG_DIRECTORY}"))
   (setq org-default-notes-file (concat org-directory "/notes.org"))
+  ;; For capture template defaults.
   (setq org-capture-templates
     ;; Files default to org-default-notes-file
     '(
@@ -485,10 +496,32 @@ before packages are loaded."
 :CREATED: %U
 :END:
 %i
-%a")
+%a
+"
+      )
+      ("f" "Fix" entry
+        (file+headline "" "tasks")
+        "* TODO Fix %? :fix:
+:PROPERTIES:
+:CREATED: %U
+:END:
+%i
+%a
+"
+      )
       ("l" "Log" entry
        (file+olp+datetree "" "log")
-      "* %?\nEntered on %U\n%i\n%a")))
+      "* %U %?
+:PROPERTIES:
+:CREATED: %U
+:END:
+
+%a
+"
+      )
+    )
+  )
+
   ;; Set default, to avoid being prompted "Symbolic link to Git-controlled
   ;; source file; follow link?" when editing .spacemacs. This disables VC-
   ;; related features, but I don't currently use those.
@@ -585,6 +618,71 @@ before packages are loaded."
    browse-url-generic-program (getenv "BROWSER")
    browse-url-browser-function 'browse-url-generic)
 
+  ;;(add-to-list 'default-frame-alist '(maximized))
+  ;; Required, otherwise on WSL the frame is created with squished features
+  ;; that don't resolve until resizing the frame.
+  (add-to-list 'default-frame-alist '(width . 138))
+  (add-to-list 'default-frame-alist '(height . 120))
+ (require 'subr-x)
+
+ (defun my/org-create-image ()
+   (setq img-folder-path
+     (concat
+       (file-name-directory buffer-file-name)
+       "images/"))
+
+   (if (not (file-exists-p img-folder-path))
+     (mkdir img-folder-path))
+
+   (setq img-name (concat "image_" (format-time-string "%Y%m%dT%H%M%S") ".png"))
+   (setq img-abspath (concat img-folder-path img-name))
+
+   ;; Traverse symlinks
+   (setq img-abspath
+     (string-trim-right
+       (shell-command-to-string
+         (concat
+           "readlink -f "
+           (shell-quote-argument img-abspath)))))
+
+   ;; Translate to Windows path.
+   (setq img-abspath-win
+     (string-trim-right
+       (shell-command-to-string
+         (concat
+           "wslpath "
+           "-aw "
+           (shell-quote-argument img-abspath)))))
+
+   ;; Use PowerShell to get the image from the clipboard and write it to the file.
+   (shell-command
+     (concat
+       "PowerShell.exe -Command "
+       (shell-quote-argument
+         (concat
+           "Add-Type -AssemblyName System.Windows.Forms;"
+           "if ($([System.Windows.Forms.Clipboard]::ContainsImage())) {"
+             "$image = [System.Windows.Forms.Clipboard]::GetImage();"
+             "[System.Drawing.Bitmap]$image.Save('"
+               img-abspath-win
+             "', [System.Drawing.Imaging.ImageFormat]::Png);"
+             "Write-Output 'clipboard content saved as file'"
+           "} else {"
+             "Write-Output 'clipboard does not contain image data'"
+           "}"
+         )
+       )
+     )
+   )
+
+   (if (file-exists-p img-abspath)
+     (insert (concat "[[./images/" img-name "]]")))
+ )
+ (defun my/org-insert-clipboard-image ()
+   (interactive)
+   (org-display-inline-images)
+   (my/org-create-image)
+   (org-display-inline-images))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
