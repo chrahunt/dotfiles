@@ -3,13 +3,13 @@
 all: stow
 
 stow: generated
-	stow */
+	stow --dir "$$PWD" --target "$$HOME" */
 
 unstow:
-	stow -D */
+	stow --dir "$$PWD" --target "$$HOME" -D */
 
 test: generated
-	stow -v --simulate */
+	stow --dir "$$PWD" --target "$$HOME" -v --simulate */
 
 generated:
 	./.dotfiles/combine-files .editrc.d editline/.editrc
