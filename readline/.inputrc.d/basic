@@ -7,7 +7,7 @@ set keyseq-timeout 0
 #set show-mode-in-prompt on
 
 
-"TAB": menu-complete
+#"TAB": menu-complete
 # alacritty-specific shift-tab
 "\e[Z": menu-complete-backward
 
