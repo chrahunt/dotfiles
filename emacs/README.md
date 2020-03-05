@@ -14,3 +14,13 @@ cd ~/.emacs.d && git pull origin develop
 ```
 
 then in emacs, execute `SPC f e D` to diff the template with the
+customized file and pull in any new parts.
+
+## org note setup
+
+A basic org note will start with
+
+```
+#+SEQ_TODO: TODO(t) WAIT(w) | DONE(d)
+#+ARCHIVE: ::* Archive
+```

@@ -618,6 +618,16 @@ before packages are loaded."
    browse-url-generic-program (getenv "BROWSER")
    browse-url-browser-function 'browse-url-generic)
 
+ ;; org-archive-subtree by default doesn't preserve the header visibility
+ ;; (internally calls org-show-all), and `save-excursion` doesn't reset it. We
+ ;; wrap it to preserve the outline visibility.
+ (defun my/org-archive-subtree (orig-fun &rest args)
+   ;; USE-MARKERS t, so that edits to the current file don't mess up our
+   ;; cursor reset.
+   (org-save-outline-visibility t
+     (apply orig-fun args)))
+  (advice-add 'org-archive-subtree :around #'my/org-archive-subtree)
+
   ;;(add-to-list 'default-frame-alist '(maximized))
   ;; Required, otherwise on WSL the frame is created with squished features
   ;; that don't resolve until resizing the frame.
