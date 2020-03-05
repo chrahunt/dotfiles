@@ -14,4 +14,4 @@ test: generated
 generated:
 	./.dotfiles/combine-files-py --match-dir-name .editrc.d . > editline/.editrc
 	./.dotfiles/combine-files-py --match-dir-name .gitignore_global.d . > git/.gitignore_global
-	./.dotfiles/make-stow-local-ignore
+	./.dotfiles/make-stow-local-ignore .

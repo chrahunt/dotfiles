@@ -17,7 +17,9 @@ def main():
             Combine files from multiple directories into one
         """
     )
-    parser.add_argument("--match-dir-name")
+    match_group = parser.add_mutually_exclusive_group(required=True)
+    match_group.add_argument("--match-dir-name")
+    match_group.add_argument("--match-file-name")
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument(
         "inputs",
@@ -29,6 +31,11 @@ def main():
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    if args.match_dir_name:
+        match_suffix = os.path.join(args.match_dir_name, "*")
+    elif args.match_file_name:
+        match_suffix = args.match_file_name
+
     matched_files = []
 
     for d in args.inputs:
@@ -36,12 +43,12 @@ def main():
             parser.error("input {0!r} does not exist".format(d))
         if not os.path.isdir(d):
             parser.error("input {0!r} is not a directory".format(d))
-        pattern = os.path.join(d, "*", args.match_dir_name, "*")
+        pattern = os.path.join(d, "*", match_suffix)
         logger.debug("Matching %s", pattern)
         matched_files.extend(glob.glob(pattern))
 
     result = merge_files(matched_files)
-    print(result)
+    sys.stdout.write(result)
 
 
 def merge_files(files):
@@ -53,7 +60,9 @@ def merge_files(files):
 
 def ordered_by_name(paths):
     # type: (Iterable[str]) -> Iterator[str]
-    return sorted(paths, key=os.path.basename)
+    return sorted(
+        paths, key=lambda p: list(reversed(os.path.split(p)))
+    )
 
 
 def with_contents(paths):
