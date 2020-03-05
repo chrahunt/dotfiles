@@ -12,6 +12,6 @@ test: generated
 	stow --dir "$$PWD" --target "$$HOME" -v --simulate */
 
 generated:
-	./.dotfiles/combine-files .editrc.d editline/.editrc
-	./.dotfiles/combine-files .gitignore_global.d git/.gitignore_global
+	./.dotfiles/combine-files-py --match-dir-name .editrc.d . > editline/.editrc
+	./.dotfiles/combine-files-py --match-dir-name .gitignore_global.d . > git/.gitignore_global
 	./.dotfiles/make-stow-local-ignore

@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+import argparse
+import glob
+import io
+import logging
+import os
+import sys
+from itertools import chain
+
+
+logger = logging.getLogger(__name__)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="""
+            Combine files from multiple directories into one
+        """
+    )
+    parser.add_argument("--match-dir-name")
+    parser.add_argument("--verbose", "-v", action="store_true")
+    parser.add_argument(
+        "inputs",
+        nargs="+",
+        help="parent directory of directories that may contain <input-dir-name>",
+    )
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    matched_files = []
+
+    for d in args.inputs:
+        if not os.path.exists(d):
+            parser.error("input {0!r} does not exist".format(d))
+        if not os.path.isdir(d):
+            parser.error("input {0!r} is not a directory".format(d))
+        pattern = os.path.join(d, "*", args.match_dir_name, "*")
+        logger.debug("Matching %s", pattern)
+        matched_files.extend(glob.glob(pattern))
+
+    result = merge_files(matched_files)
+    print(result)
+
+
+def merge_files(files):
+    files = ordered_by_name(files)
+    entries = with_contents(files)
+    text_chunks = map(formatted_entry, entries)
+    return u"\n".join(chain.from_iterable(text_chunks))
+
+
+def ordered_by_name(paths):
+    # type: (Iterable[str]) -> Iterator[str]
+    return sorted(paths, key=os.path.basename)
+
+
+def with_contents(paths):
+    # type: (Iterable[str]) -> Iterator[Tuple[str, str]]
+    for path in paths:
+        with io.open(path, encoding="utf-8") as f:
+            yield (path, f.read())
+
+
+def formatted_entry(entry):
+    # type: (Tuple[str, str]) -> Iterator[str]
+    path, text = entry
+    return chain(
+        (format_header(path),), ensure_trailing_newline(text)
+    )
+
+
+def format_header(path):
+    # type: (str) -> str
+    return "# source: {0!r}".format(path)
+
+
+def ensure_trailing_newline(text):
+    # type: (str) -> Iterable[str]
+    if text.endswith("\n"):
+        return (text,)
+    return (text, "\n")
+
+
+if __name__ == "__main__":
+    main()
