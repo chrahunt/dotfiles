@@ -472,6 +472,112 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+  ;; Pull from environment, since I use a different path on different machines.
+  (setq org-directory (substitute-in-file-name "${EMACS_ORG_DIRECTORY}"))
+  (setq org-default-notes-file (concat org-directory "/notes.org"))
+  (setq org-capture-templates
+    ;; Files default to org-default-notes-file
+    '(
+      ("t" "To Do" entry
+        (file+headline "" "tasks")
+       "* TODO %?
+:PROPERTIES:
+:CREATED: %U
+:END:
+%i
+%a")
+      ("l" "Log" entry
+       (file+olp+datetree "" "log")
+      "* %?\nEntered on %U\n%i\n%a")))
+  ;; Set default, to avoid being prompted "Symbolic link to Git-controlled
+  ;; source file; follow link?" when editing .spacemacs. This disables VC-
+  ;; related features, but I don't currently use those.
+  (setq vs-follow-symlinks nil)
+  ;; Custom key bindings setup. "o" is reserved for user-use
+  (spacemacs/declare-prefix "o" "custom")
+  (spacemacs/declare-prefix-for-mode 'org-mode "o" "custom")
+
+  ;; Open new frame into current buffer.
+  ;; Derived from https://stackoverflow.com/a/47333316/1698058
+  (defun my/clone-indirect-buffer-other-frame ()
+    "Like `clone-indirect-buffer' but display in another window."
+    ;; Use display-buffer-overriding-action to override purpose, which by default
+    ;; opens the buffer in the same window.
+    (interactive
+      (let ((display-buffer-overriding-action '((display-buffer-pop-up-frame))))
+        (clone-indirect-buffer nil t nil))))
+
+  (spacemacs/set-leader-keys "on" 'my/clone-indirect-buffer-other-frame)
+
+  (defun my/org-download-paste-image--xclip (path)
+    "xclip that doesn't hang when emacs itself owns the clipboard"
+    ;; When xclip is invoked synchronously (like shell-command or
+    ;; call-process), and when emacs itself owns the clipboard, the xclip
+    ;; command hangs waiting for a response. For that reason, we invoke
+    ;; xclip asynchronously (with start-process-shell-command) and wait for
+    ;; it.
+    (let* ((command (concat "xclip -sel clip -t image/png -o 2>/dev/null </dev/null >" path))
+            (process (start-process-shell-command "xclip" nil command)))
+      ;; Wait for up to 2 seconds
+      (accept-process-output process 2)
+      (let* ((alive (process-live-p process))
+              (exit-code (process-exit-status process)))
+        (if (and (not alive) (eq exit-code 0))
+            (progn
+              (insert (concat "[[./" filename "]]"))
+              (org-display-inline-images))
+          (progn
+            (if (not alive)
+                (princ (format "xclip exited with code %d" exit-code))
+              (progn
+                (princ (format "timeout waiting for xclip, killing it"))
+                (kill-process process)))
+            (delete-file path)))))
+    )
+
+  ;; (, i D s) for normal screenshot
+  ;; (,j)
+  ;;(spacemacs/set-leader-keys-for-mode 'org-mode "os")
+
+  (defun my/org-download-paste-image ()
+    "Paste image from clipboard into current buffer"
+    (interactive)
+    (let* ((org-download-screenshot-method #'my/org-download-paste-image--xclip))
+      (org-download-screenshot))
+  )
+
+  (defun my/org-download-paste-image2 ()
+    "Manually-created"
+    (interactive)
+    (let* ((org-download-screenshot-method)))
+    ;; Create filename
+    ;; TODO Make images directory if it doesn't exist
+    ;; TODO Ensure xclip is on PATH
+    (let* ((relative-filename (concat "images/" (format-time-string "%Y%m%dT%H%M%S_")))
+           (base-filename (make-temp-name relative-filename))
+           (filename (concat base-filename ".png")))
+      ;; When xclip is invoked synchronously (like shell-command or
+      ;; call-process), and when emacs itself owns the clipboard, the xclip
+      ;; command hangs waiting for a response. For that reason, we invoke
+      ;; xclip asynchronously (with start-process-shell-command) and wait for
+      ;; it.
+      (let* ((command (concat "xclip -sel clip -t image/png -o 2>/dev/null </dev/null >" filename))
+             (process (start-process-shell-command "xclip" nil command)))
+        ;; Wait for up to 2 seconds
+        (accept-process-output process 2)
+        (let* ((alive (process-live-p process))
+               (exit-code (process-exit-status process)))
+          (if (and (not alive) (eq exit-code 0))
+              (progn
+                (insert (concat "[[./" filename "]]"))
+                (org-display-inline-images))
+            (progn
+              (if (not alive)
+                  (princ (format "xclip exited with code %d" exit-code))
+                (progn
+                  (princ (format "timeout waiting for xclip, killing it"))
+                  (kill-process process)))
+              (delete-file filename)))))))
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
