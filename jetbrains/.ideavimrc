@@ -1,1 +1,11 @@
-../vim/.vimrc
+" This file is read by IntelliJ-based IDEs with IdeaVim installed.
+"
+" As of Feb 2020, the plugin does not support conditionals in a
+" single file, so this file is meant for IDE-only configurations.
+"
+" Check https://youtrack.jetbrains.com/issue/VIM-1573 for updates.
+source ~/.vimrc
+
+" cscope-like binding to show all references of the symbol under
+" the cursor
+nmap <C-\> :action FindUsages<CR>

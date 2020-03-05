@@ -13,3 +13,10 @@ KEYTIMEOUT=1
 autoload -z edit-command-line
 zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
+
+alias ..='cd ..'
+alias ...='cd .. && cd ..'
+alias ....='cd .. && cd .. && cd ..'
+alias .....='cd .. && cd .. && cd .. && cd ..'
+alias ......='cd .. && cd .. && cd .. && cd .. && cd ..'
+alias .......='cd .. && cd .. && cd .. && cd .. && cd .. && cd ..'

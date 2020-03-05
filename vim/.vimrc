@@ -1,3 +1,4 @@
+
 " - XDG Directories -----------------------------------------------------------
 if !empty($XDG_CACHE_HOME)
     let xdg_cache_home=$XDG_CACHE_HOME.'/vim'
@@ -26,14 +27,34 @@ let &backupdir=xdg_cache_home.'//'
 let &viminfo.=',n'.xdg_data_home.'/viminfo'
 
 " - General -------------------------------------------------------------------
+" Copy indent from current line when starting a new line
 set autoindent
+" Use 4 spaces by default for indentation
 set tabstop=4
 set shiftwidth=4
 set expandtab
+" Enable filetype detection and filetype-based autocmd execution
+filetype on
+" Set filetype-based indent by default
 filetype indent on
+" Load filetype-specific indent files from 'runtimepath'
 syntax on
 
+" Do not auto-wrap lines, ever
+set textwidth=0
+
+" If a buffer is loaded, just hide (don't unload) the one that was there
+" before
 set hidden
+
+" Show col/lineno in the bottom-right
+set ruler
+
+" Allow backspace to erase autoindent, line breaks, and the start of
+" the current insert. (legacy value may be '2' in other configs)
+set backspace=indent,eol,start
+
+" This key will be used in place of <leader> in other shortcuts.
 let mapleader = " "
 
 " Pipe character without gaps
@@ -42,13 +63,16 @@ hi VertSplit cterm=NONE
 
 autocmd FuncUndefined * exe 'runtime autoload/' . expand('<afile>') . '.vim'
 "# Misc Keybindings
-nnoremap <Enter> i<Enter><Esc>l
+" TODO: Don't do in dired
+"nnoremap <Enter> i<Enter><Esc>l
 
-"# Syntax highlighting
-map <F10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
+" Get the syntax attributes of the characters under the cursor
+" (h)elp (d)escribe (h)ighlight
+nmap <leader>hdh :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
             \ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
             \ . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<CR>
-" highlights for folds
+
+" Use a muted color for fold highlights, which are usually really bad.
 hi Folded ctermbg=DarkGrey cterm=bold
 
 "# Split-screen
@@ -66,15 +90,19 @@ nmap <C-k> <C-w>k
 nmap <C-l> <C-w>l
 
 " (w)indow
+"   (*) direction
 nmap <leader>wh <C-w>h
 nmap <leader>wj <C-w>j
 nmap <leader>wk <C-w>k
 nmap <leader>wl <C-w>l
 nmap <leader>wc :q<Enter>
 
-"## open location
+" When splitting, put new window to the right or below
 set splitright
 set splitbelow
+
+" By default when pressing ESC, it may be interpreted as part
+set timeoutlen=1000 ttimeoutlen=0
 
 "# Tabs
 "## navigation
@@ -112,8 +140,10 @@ let perl_fold=1
 let perl_nofold_packages=1
 let perl_fold_blocks=1
 
-" - Filetypes -----------------------------------------------------------------
 
+
+" - Filetypes -----------------------------------------------------------------
+" As used in Boost
 au BufNewFile,BufRead *.ipp set filetype=cpp
 
 " 'syslog' is messages, always
@@ -124,17 +154,20 @@ au BufRead strace.* set filetype=strace
 
 au FileType yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 
-" Fast escape in visual block insert
-set timeoutlen=1000 ttimeoutlen=0
-
 " Force write, prompt for sudo
 cmap w!! w !sudo tee > /dev/null %
 
 " Copy file/line to clipboard.
 nnoremap <silent> <C-p> :let @+ = expand("%:p") . ':' . line(".")<CR>
 
-" long wrapped lines
-set display+=lastline
+" By default, a short line followed by a line that's too long for the rest of
+" the screen will display like
+" abc
+" @
+" @
+" @
+" This makes it display as much of the line as possible instead
+set display=lastline
 
 " ctags
 set autochdir
@@ -148,6 +181,10 @@ autocmd filetype cpp nnoremap <F4> :w <bar> exec '!g++ -std=c++14 -ggdb3 '.shell
 augroup templates
     autocmd BufNewFile *.cpp 0r ~/.vim/templates/skeleton.cpp
 augroup END
+
+" TODO: Extract amazon-specific fixes
+" Replace light blue status line text with dark text
+hi StatusLine ctermfg=black
 
 " - Plugins -------------------------------------------------------------------
 " junegunn/vim-plug

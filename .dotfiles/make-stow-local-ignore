@@ -8,18 +8,23 @@
 # For declaring things to be ignored locally to a package, use
 # .stow-local-ignore.local.
 
+DIR="${0%/*}"
+
 # Concatenate all .global files into one file.
 stow_global_ignore_f="$(mktemp)"
-find . -name ".stow-local-ignore.global" \
-    -exec sh -c 'printf "# %s\n%s\n" "{}" "$(cat "{}")"' \; \
-    > "$stow_global_ignore_f"
+"$DIR/combine-files-py" --match-file-name ".stow-local-ignore.global" "$@" > "$stow_global_ignore_f"
 
 # Create the actual .stow-local-ignore files in each directory.
-for d in */; do
-    cat <<EOF > "$d/.stow-local-ignore"
+for parent_dir in "$@"; do
+    cd "$parent_dir"
+    for d in */; do
+        cat <<EOF > "$d/.stow-local-ignore"
 # global
 $(cat "$stow_global_ignore_f")
+
 # local
 $([ -f "$d/.stow-local-ignore.local" ] && cat "$d/.stow-local-ignore.local")
 EOF
+    done
+    cd - > /dev/null
 done
