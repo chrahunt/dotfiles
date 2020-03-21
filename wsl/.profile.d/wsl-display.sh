@@ -2,4 +2,4 @@
 if [ -z "$IS_WSL" ]; then
     return
 fi
-export DISPLAY=:0.0
+export DISPLAY=localhost:0.0
