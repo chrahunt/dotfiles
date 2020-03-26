@@ -78,10 +78,13 @@ so `SSH_AUTH_SOCK` is just set to `$HOME/.ssh/auth_sock`.
 
 ### Linux (remote)
 
-When SSHing to a remote server, forward SSH agent to the remote server,
-then sshd will set `SSH_AUTH_SOCK` when creating the session.
-When checking for the situations above, we don't do anything if this is
-already set.
+1. SSH agent forwarding is configured
+2. For interactive sessions, tmux is used almost exclusively on the remote side,
+   so having a single location as the authoritative agent socket is important,
+   since existing shell sessions can't be refreshed.
+3. Rarely, if ever, do I have more than one active connection that has agent
+   forwarding enabled. If I connect again it's OK to take the last connection's
+   `SSH_AUTH_SOCK`. In case that changes it would be nice to switch easily.
 
 ## Testing
 
