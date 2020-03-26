@@ -1,6 +1,8 @@
 #!/bin/sh
 # Common aliases/settings/functions
-set -o vi
+# When sourced from .zprofile in emulate mode, this traces
+# "can't change option: vi", so don't do that.
+[ -z "$IN_ZPROFILE" ] && set -o vi
 
 alias ..='cd ..'
 alias ...='cd .. && cd ..'
