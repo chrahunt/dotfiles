@@ -60,3 +60,5 @@ helper = /home/chris/.mozbuild/git-cinnabar/git-cinnabar-helper
 default = current
 [pull]
 ff = only
+[include]
+    path = ~/.gitconfig.overrides
