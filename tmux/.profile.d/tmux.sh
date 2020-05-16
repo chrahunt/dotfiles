@@ -7,4 +7,3 @@ elif command_exists tmux; then
     alias t=tmux
 fi
 export TMUX_CONFIG=~/.tmux.conf
-export TMUX_COPY_COMMAND="xclip -in -selection clipboard"

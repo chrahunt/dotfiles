@@ -146,6 +146,9 @@ let perl_fold_blocks=1
 " As used in Boost
 au BufNewFile,BufRead *.ipp set filetype=cpp
 
+" For Spacemacs
+au BufNewFile,BufRead .spacemacs set filetype=lisp
+
 " 'syslog' is messages, always
 au BufRead syslog set filetype=messages
 au BufRead syslog.* set filetype=messages

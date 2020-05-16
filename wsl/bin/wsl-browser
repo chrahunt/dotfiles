@@ -1,0 +1,3 @@
+#!/bin/sh
+# `start` with a URL will open the default browser
+exec /mnt/c/Windows/System32/cmd.exe /c start "$@"
