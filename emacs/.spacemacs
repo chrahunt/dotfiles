@@ -40,20 +40,21 @@ This function should only modify configuration layer settings."
      ;; ----------------------------------------------------------------
      ;; auto-completion
      ;; better-defaults
-     emacs-lisp
-     git
-     helm
+     ;; emacs-lisp
+     ;; git
+     ;; helm
      ;; lsp
      ;; markdown
-     multiple-cursors
-     org
+     ;; multiple-cursors
+     ;; org
      ;; (shell :variables
      ;;        shell-default-height 30
      ;;        shell-default-position 'bottom)
      ;; spell-checking
      ;; syntax-checking
-     treemacs
+     ;; treemacs
      ;; version-control
+     chrahunt
      )
 
    ;; List of additional packages that will be installed without being
@@ -69,17 +70,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-frozen-packages '()
 
    ;; A list of packages that will not be installed and loaded.
-   dotspacemacs-excluded-packages
-   '(
-     ;; org-bullets has several issues:
-     ;; - doesn't respect org-hide font face: https://github.com/sabof/org-bullets/pull/19
-     ;; - doesn't work when switching theme: https://github.com/syl20bnr/spacemacs/issues/4688
-     org-bullets
-     ;; This prevents C-backspace from deleting words when at the beginning of
-     ;; the line (since clean-aindent--inside-indentp is true). I use C-d and <<
-     ;; anyway for dedenting in command/insert mode, so it's not useful.
-     clean-aindent-mode
-   )
+   dotspacemacs-excluded-packages '()
 
    ;; Defines the behaviour of Spacemacs when installing packages.
    ;; Possible values are `used-only', `used-but-keep-unused' and `all'.
@@ -476,56 +467,68 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
-  ;; OS identifiers
-  ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
-  (when (string-match "-[Mm]icrosoft" operating-system-release)
-    (setq is-wsl t)
-    )
-
   ;; Pull from environment, since I use a different path on different machines.
   (setq org-directory (substitute-in-file-name "${EMACS_ORG_DIRECTORY}"))
   (setq org-default-notes-file (concat org-directory "/notes.org"))
-  ;; For capture template defaults.
-  (setq org-capture-templates
+  ;; Set default agenda files to notes file, since I use a single note everywhere.
+  (setq org-agenda-files `(,org-default-notes-file))
+
+  (setq org-capture-templates '(
     ;; Files default to org-default-notes-file
-    '(
-      ("t" "To Do" entry
-        (file+headline "" "tasks")
-       "* TODO %?
-:PROPERTIES:
-:CREATED: %U
-:END:
-%i
-%a
-"
-      )
-      ("f" "Fix" entry
-        (file+headline "" "tasks")
-        "* TODO Fix %? :fix:
-:PROPERTIES:
-:CREATED: %U
-:END:
-%i
-%a
-"
-      )
-      ("l" "Log" entry
-       (file+olp+datetree "" "log")
-      "* %U %?
+    ;; Entries have
+    ;; - binding
+    ;; - name
+    ;; - type
+    ;; - target
+    ;;   - type
+    ;;   - file (default is org-default-notes-file)
+    ;;   - header
+    ;; - format
+    ("t" "To Do" entry
+      (file+headline "" "tasks")
+      "* TODO %^{Description}
 :PROPERTIES:
 :CREATED: %U
 :END:
 
+%?
+
 %a
 "
-      )
     )
-  )
+    ("n" "Note" entry
+      (file+headline "" "notes")
+      "* TODO %^{Title} :note:
+:PROPERTIES:
+:CREATED: %U
+:END:
+
+%?
+
+%a
+"
+    )
+    ("i" "Interruption" entry
+      (file+headline "" "notes")
+      "* %^{Title} :unsorted:interruption:
+:PROPERTIES:
+:CREATED: %U
+:END:
+
+%?
+
+%a
+"
+      :prepend t :clock-in t :clock-resume t
+    )
+  ))
 
   ;; Set default, to avoid being prompted "Symbolic link to Git-controlled
   ;; source file; follow link?" when editing .spacemacs. This disables VC-
   ;; related features, but I don't currently use those.
+  ;; TODO: Fix this, since it doesn't work.
   (setq vs-follow-symlinks nil)
+
   ;; Custom key bindings setup. "o" is reserved for user-use
   (spacemacs/declare-prefix "o" "custom")
   (spacemacs/declare-prefix-for-mode 'org-mode "o" "custom")
@@ -538,161 +541,132 @@ before packages are loaded."
     ;; opens the buffer in the same window.
     (interactive
       (let ((display-buffer-overriding-action '((display-buffer-pop-up-frame))))
-        (clone-indirect-buffer nil t nil))))
+        (clone-indirect-buffer nil t nil)
+      )
+    )
+  )
 
   (spacemacs/set-leader-keys "on" 'my/clone-indirect-buffer-other-frame)
 
-  (defun my/org-download-paste-image--xclip (path)
-    "xclip that doesn't hang when emacs itself owns the clipboard"
-    ;; When xclip is invoked synchronously (like shell-command or
-    ;; call-process), and when emacs itself owns the clipboard, the xclip
-    ;; command hangs waiting for a response. For that reason, we invoke
-    ;; xclip asynchronously (with start-process-shell-command) and wait for
-    ;; it.
-    (let* ((command (concat "xclip -sel clip -t image/png -o 2>/dev/null </dev/null >" path))
-            (process (start-process-shell-command "xclip" nil command)))
-      ;; Wait for up to 2 seconds
-      (accept-process-output process 2)
-      (let* ((alive (process-live-p process))
-              (exit-code (process-exit-status process)))
-        (if (and (not alive) (eq exit-code 0))
-            (progn
-              (insert (concat "[[./" filename "]]"))
-              (org-display-inline-images))
-          (progn
-            (if (not alive)
-                (princ (format "xclip exited with code %d" exit-code))
-              (progn
-                (princ (format "timeout waiting for xclip, killing it"))
-                (kill-process process)))
-            (delete-file path)))))
-    )
-
-  ;; (, i D s) for normal screenshot
-  ;; (,j)
-  ;;(spacemacs/set-leader-keys-for-mode 'org-mode "os")
-
-  (defun my/org-download-paste-image ()
-    "Paste image from clipboard into current buffer"
-    (interactive)
-    (let* ((org-download-screenshot-method #'my/org-download-paste-image--xclip))
-      (org-download-screenshot))
-  )
-
-  (defun my/org-download-paste-image2 ()
-    "Manually-created"
-    (interactive)
-    (let* ((org-download-screenshot-method)))
-    ;; Create filename
-    ;; TODO Make images directory if it doesn't exist
-    ;; TODO Ensure xclip is on PATH
-    (let* ((relative-filename (concat "images/" (format-time-string "%Y%m%dT%H%M%S_")))
-           (base-filename (make-temp-name relative-filename))
-           (filename (concat base-filename ".png")))
-      ;; When xclip is invoked synchronously (like shell-command or
-      ;; call-process), and when emacs itself owns the clipboard, the xclip
-      ;; command hangs waiting for a response. For that reason, we invoke
-      ;; xclip asynchronously (with start-process-shell-command) and wait for
-      ;; it.
-      (let* ((command (concat "xclip -sel clip -t image/png -o 2>/dev/null </dev/null >" filename))
-             (process (start-process-shell-command "xclip" nil command)))
-        ;; Wait for up to 2 seconds
-        (accept-process-output process 2)
-        (let* ((alive (process-live-p process))
-               (exit-code (process-exit-status process)))
-          (if (and (not alive) (eq exit-code 0))
-              (progn
-                (insert (concat "[[./" filename "]]"))
-                (org-display-inline-images))
-            (progn
-              (if (not alive)
-                  (princ (format "xclip exited with code %d" exit-code))
-                (progn
-                  (princ (format "timeout waiting for xclip, killing it"))
-                  (kill-process process)))
-              (delete-file filename)))))))
-
- ;; Assume that BROWSER has been set and points to an appropriate script.
- ;; TODO: Make WSL-specific if it breaks native Ubuntu
- (setq
-   browse-url-generic-program (getenv "BROWSER")
-   browse-url-browser-function 'browse-url-generic)
-
- ;; org-archive-subtree by default doesn't preserve the header visibility
- ;; (internally calls org-show-all), and `save-excursion` doesn't reset it. We
- ;; wrap it to preserve the outline visibility.
- (defun my/org-archive-subtree (orig-fun &rest args)
-   ;; USE-MARKERS t, so that edits to the current file don't mess up our
-   ;; cursor reset.
-   (org-save-outline-visibility t
-     (apply orig-fun args)))
-  (advice-add 'org-archive-subtree :around #'my/org-archive-subtree)
-
-  ;;(add-to-list 'default-frame-alist '(maximized))
   ;; Required, otherwise on WSL the frame is created with squished features
   ;; that don't resolve until resizing the frame.
   (add-to-list 'default-frame-alist '(width . 138))
   (add-to-list 'default-frame-alist '(height . 120))
- (require 'subr-x)
 
- (defun my/org-create-image ()
-   (setq img-folder-path
-     (concat
-       (file-name-directory buffer-file-name)
-       "images/"))
+  ;; Enable inline evaluation of Python source blocks.
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)))
 
-   (if (not (file-exists-p img-folder-path))
-     (mkdir img-folder-path))
+  ;; Prevent src block auto-indentation
+  ;; https://github.com/syl20bnr/spacemacs/issues/13255
+  (setq org-src-preserve-indentation t)
 
-   (setq img-name (concat "image_" (format-time-string "%Y%m%dT%H%M%S") ".png"))
-   (setq img-abspath (concat img-folder-path img-name))
+  ;; Handles arbitrary date properties, defaulting to 1970-01-01.
+  ;; Based on https://emacs.stackexchange.com/a/26369
+  (defun my/org-agenda-cmp-date-property (prop)
+    "Compare two `org-mode' agenda entries, `A' and `B', by some date property.
 
-   ;; Traverse symlinks
-   (setq img-abspath
-     (string-trim-right
-       (shell-command-to-string
-         (concat
-           "readlink -f "
-           (shell-quote-argument img-abspath)))))
+If a is before b, return -1. If a is after b, return 1. If they
+are equal return t."
+    (lexical-let ((prop prop))
+      #'(
+        lambda (a b)
+        (let*
+          (
+            (a-pos (get-text-property 0 'org-marker a))
+            (b-pos (get-text-property 0 'org-marker b))
+            (a-date (or (org-entry-get a-pos prop) "[1970-01-01]"))
+            (b-date (or (org-entry-get b-pos prop) "[1970-01-01]"))
+            (cmp (compare-strings a-date nil nil b-date nil nil))
+          )
+          (if (eq cmp t) nil (signum cmp))
+        )
+      )
+    )
+  )
 
-   ;; Translate to Windows path.
-   (setq img-abspath-win
-     (string-trim-right
-       (shell-command-to-string
-         (concat
-           "wslpath "
-           "-aw "
-           (shell-quote-argument img-abspath)))))
+  (defun my/org-agenda-entry-not-in-tasks ()
+    (
+      let*
+      ((outline-path (org-get-outline-path)))
+      (if (not (and (eq (length outline-path) 1) (string= (car outline-path) "tasks"))) (point))
+    )
+  )
 
-   ;; Use PowerShell to get the image from the clipboard and write it to the file.
-   (shell-command
-     (concat
-       "PowerShell.exe -Command "
-       (shell-quote-argument
-         (concat
-           "Add-Type -AssemblyName System.Windows.Forms;"
-           "if ($([System.Windows.Forms.Clipboard]::ContainsImage())) {"
-             "$image = [System.Windows.Forms.Clipboard]::GetImage();"
-             "[System.Drawing.Bitmap]$image.Save('"
-               img-abspath-win
-             "', [System.Drawing.Imaging.ImageFormat]::Png);"
-             "Write-Output 'clipboard content saved as file'"
-           "} else {"
-             "Write-Output 'clipboard does not contain image data'"
-           "}"
-         )
-       )
-     )
-   )
+  (setq org-agenda-custom-commands
+    '(
+      ("o" . "Custom")
+      ("oi" "Inbox"
+        ;; +unsorted - items marked unsorted
+        ;; -note - items not marked note
+        ;; +TODO="TODO" - only in TODO state
+        ;; -ARCHIVE_TIME={.} - where there is no ARCHIVE_TIME property
+        ;;tags-todo "+unsorted-note+TODO=\"TODO\"-ARCHIVE_TIME={.}"
+        tags-todo "TODO=\"TODO\"-ARCHIVE_TIME={.}"
+        (
+          ;; Ignore all entries except those under the top-level 'tasks' header
+          (org-agenda-skip-function 'my/org-agenda-entry-not-in-tasks)
+          ;; Show "Inbox:" instead of the search string as the first line of the agenda
+          (org-agenda-overriding-header "Inbox:")
+          ;; Sort by CREATED date
+          (org-agenda-cmp-user-defined (my/org-agenda-cmp-date-property "CREATED"))
+          ;; Sort descending
+          (org-agenda-sorting-strategy '(user-defined-down))
+          ;; Override the default prefix used for the item display on the agenda page.
+          ;; Normally this will show the category, "notes:    ", as derived from the
+          ;; filename, which is not useful here.
+          (org-agenda-prefix-format '((tags . "  ")))
+        )
+      )
+      ("os" "Scheduled"
+        agenda ""
+        (
+          ;; Only show scheduled timestamps (not deadline or timestamp)
+          (org-agenda-entry-types '(:scheduled))
+          ;; Show today and tomorrow
+          (org-agenda-span 2)
+          ;; Start week on today
+          (org-agenda-start-on-weekday nil)
+        )
+      )
+      ("op" "Projects"
+        search ":project:"
+        ;; Specify format
+        (
+          ;; Only show headlines and descriptions
+          (org-overriding-columns-format "%25ITEM %description")
+          (org-agenda-view-columns-initially t)
+        )
+      )
+      ("oa" "Active project"
+        tags "+project+TODO=\"INPROGRESS\""
+        (
+          (org-agenda-overriding-header "Active project:")
+          ;; Prevent :project: from being inherited.
+          (org-use-tag-inheritance nil)
+        )
+      )
+      ("ot" "Project tasks"
+        tags "TODO=\"NEXT\""
+        (
+          (org-agenda-overriding-header "Available tasks:")
+        )
+      )
+    )
+  )
 
-   (if (file-exists-p img-abspath)
-     (insert (concat "[[./images/" img-name "]]")))
- )
- (defun my/org-insert-clipboard-image ()
-   (interactive)
-   (org-display-inline-images)
-   (my/org-create-image)
-   (org-display-inline-images))
+  (defun my/org-refile-to-clock ()
+    (interactive)
+    (org-refile 2))
+
+  ;; TODO: Have a nicer way to refile to project
+  (setq org-refile-use-outline-path t)
+  (setq org-outline-path-complete-in-steps nil)
+  (setq org-refile-targets '((nil . (:maxlevel . 9))))
+
+  ;; Raise an error instead of editing hidden text
+  (setq org-catch-invisible-edits 'error)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -714,7 +688,7 @@ This function is called at the very end of Spacemacs initialization."
  '(org-hide-leading-stars t)
  '(package-selected-packages
    (quote
-    (ws-butler writeroom-mode visual-fill-column winum volatile-highlights vi-tilde-fringe uuidgen treemacs-projectile treemacs-magit treemacs-evil treemacs ht pfuture toc-org symon symbol-overlay string-inflection spaceline-all-the-icons spaceline powerline smeargle restart-emacs rainbow-delimiters popwin persp-mode password-generator paradox spinner overseer orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-cliplink org-bullets org-brain open-junk-file nameless move-text magit-svn magit-gitflow magit-popup macrostep lorem-ipsum link-hint indent-guide hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-xref helm-themes helm-swoop helm-purpose window-purpose imenu-list helm-projectile projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore request helm-git-grep helm-flx helm-descbinds helm-ag google-translate golden-ratio gnuplot gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link flycheck-package package-lint flycheck pkg-info epl let-alist flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit transient git-commit with-editor evil-lisp-state evil-lion evil-indent-plus evil-iedit-state iedit evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens smartparens paredit evil-args evil-anzu anzu eval-sexp-fu elisp-slime-nav editorconfig dumb-jump doom-modeline shrink-path all-the-icons memoize f dash s devdocs define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile packed aggressive-indent ace-window ace-link ace-jump-helm-line helm avy helm-core popup which-key use-package pcre2el org-plus-contrib hydra lv hybrid-mode font-lock+ evil goto-chg undo-tree dotenv-mode diminish bind-map bind-key async)))
+    (evil-snipe ws-butler writeroom-mode visual-fill-column winum volatile-highlights vi-tilde-fringe uuidgen treemacs-projectile treemacs-magit treemacs-evil treemacs ht pfuture toc-org symon symbol-overlay string-inflection spaceline-all-the-icons spaceline powerline smeargle restart-emacs rainbow-delimiters popwin persp-mode password-generator paradox spinner overseer orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-cliplink org-bullets org-brain open-junk-file nameless move-text magit-svn magit-gitflow magit-popup macrostep lorem-ipsum link-hint indent-guide hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-xref helm-themes helm-swoop helm-purpose window-purpose imenu-list helm-projectile projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore request helm-git-grep helm-flx helm-descbinds helm-ag google-translate golden-ratio gnuplot gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link flycheck-package package-lint flycheck pkg-info epl let-alist flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit transient git-commit with-editor evil-lisp-state evil-lion evil-indent-plus evil-iedit-state iedit evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens smartparens paredit evil-args evil-anzu anzu eval-sexp-fu elisp-slime-nav editorconfig dumb-jump doom-modeline shrink-path all-the-icons memoize f dash s devdocs define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile packed aggressive-indent ace-window ace-link ace-jump-helm-line helm avy helm-core popup which-key use-package pcre2el org-plus-contrib hydra lv hybrid-mode font-lock+ evil goto-chg undo-tree dotenv-mode diminish bind-map bind-key async)))
  '(spacemacs-large-file-modes-list
    (quote
     (archive-mode tar-mode jka-compr git-commit-mode image-mode doc-view-mode doc-view-mode-maybe ebrowse-tree-mode pdf-view-mode tags-table-mode fundamental-mode org-mode))))

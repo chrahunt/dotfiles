@@ -24,3 +24,10 @@ A basic org note will start with
 #+SEQ_TODO: TODO(t) WAIT(w) | DONE(d)
 #+ARCHIVE: ::* Archive
 ```
+
+## organization
+
+`.spacemacs` includes layer `chrahunt`, in which I have my configuration.
+
+Most of the package-specific settings are in `chrahunt/packages.el`,
+which calls out to functions in `chrahunt/funcs.el` as needed.
