@@ -4,7 +4,8 @@
 
 ### Windows
 
-On Windows, ssh is available natively and maintained as a Windows service.
+On Windows, ssh is available natively and ssh-agent is maintained as a Windows service.
+`ssh` knows to try for `ssh-agent` via a named pipe.
 
 ### WSL
 
@@ -45,4 +46,56 @@ function Install-WSL-SSH-Shortcut {
 
 Set-WSL-SSH-Env
 Install-WSL-SSH-Shortcut
+```
+
+### Ubuntu
+
+On native Ubuntu, run ssh-agent as a user-mode systemd service, like
+
+```
+[Unit]
+Description=SSH Agent
+
+[Service]
+Type=simple
+# %h - User-mode home directory
+Environment=SSH_AUTH_SOCK=%h/.ssh/auth_sock
+ExecStart=/usr/bin/ssh-agent -D -a %h/.ssh/auth_sock
+
+[Install]
+WantedBy=default.target
+```
+
+in `$HOME/.local/share/systemd/user/ssh-agent.service`, installed with
+
+```
+systemctl --user enable ssh-agent && systemctl --user start ssh-agent
+```
+
+so `SSH_AUTH_SOCK` is just set to `$HOME/.ssh/auth_sock`.
+
+### Linux (remote)
+
+When SSHing to a remote server, forward SSH agent to the remote server,
+then sshd will set `SSH_AUTH_SOCK` when creating the session.
+When checking for the situations above, we don't do anything if this is
+already set.
+
+## Testing
+
+```
+Given we are running in Ubuntu (with KDE)
+And the ssh-agent has been set up using the instructions above
+And dotfiles have been installed
+And the computer has been restarted
+When apps are started with KRunner
+Then they will have SSH_AUTH_SOCK set in their environment
+And SSH_AUTH_SOCK will be set to $HOME/.ssh/auth_sock
+
+Given we are running in Ubuntu (with KDE)
+And the ssh-agent has been set up using the instructions above
+And dotfiles have been installed
+When alacritty is started via KRunner
+Then the resulting shell will have SSH_AUTH_SOCK set to $HOME/.ssh/auth_sock (resolved)
+And sh -c 'echo $SSH_AUTH_SOCK' will output $HOME/.ssh/auth_sock (resolved)
 ```
