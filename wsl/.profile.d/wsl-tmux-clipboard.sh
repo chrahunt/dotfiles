@@ -1,4 +1,4 @@
-if [ -n "$IS_WSL" ]; then
+if [ -z "$IS_WSL" ]; then
     return
 fi
 
