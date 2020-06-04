@@ -60,7 +60,9 @@ Description=SSH Agent
 Type=simple
 # %h - User-mode home directory
 Environment=SSH_AUTH_SOCK=%h/.ssh/auth_sock
-ExecStart=/usr/bin/ssh-agent -D -a %h/.ssh/auth_sock
+ExecStart=/usr/bin/ssh-agent -D -a "$SSH_AUTH_SOCK"
+# In case ssh-agent was killed or the system restarted
+ExecStartPre=/bin/rm -rf "$SSH_AUTH_SOCK"
 
 [Install]
 WantedBy=default.target
