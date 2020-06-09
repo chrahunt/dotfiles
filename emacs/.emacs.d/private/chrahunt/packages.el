@@ -41,12 +41,13 @@
     (chrahunt/fix-org-store-link)
     (chrahunt/fix-org-archive-subtree)
     :post-config
-    ;; When `org-store-link` is executed, create an :ID: property for it and
-    ;; store that, instead of using the headline. This makes it easier to move
-    ;; nodes around without breaking links. Do not do it for auto-generated
-    ;; links, as used for `%a` in capture templates, since I don't really
-    ;; use those too much.
-    (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
+    ;; When `org-store-link` is executed, create an :ID: property for the
+    ;; corresponding node and store that, instead of using the headline.
+    ;; This makes it easier to move nodes around without breaking links.
+    ;; Since I only use my own org files and this flexibility is important to
+    ;; me, I don't really care if extra :ID: properties get created when doing
+    ;; an org-capture.
+    (setq org-id-link-to-org-use-id t)
     ;; By default, org-clock functions only store the clock history in-memory.
     ;; Save it to disk instead, so it can be used after emacs restart.
     ;; I don't want to auto-resume tasks after kill, so use 'history instead of
