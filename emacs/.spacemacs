@@ -622,8 +622,9 @@ are equal return t."
       ("os" "Scheduled"
         agenda ""
         (
-          ;; Only show scheduled timestamps (not deadline or timestamp)
-          (org-agenda-entry-types '(:scheduled))
+          ;; Show scheduled items or appointments. Deadlines are handled
+          ;; as part of higher-level planning.
+          (org-agenda-entry-types '(:scheduled :timestamp))
           ;; Show today and tomorrow
           (org-agenda-span 2)
           ;; Start week on today
