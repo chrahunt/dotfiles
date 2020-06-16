@@ -617,6 +617,9 @@ are equal return t."
           ;; Normally this will show the category, "notes:    ", as derived from the
           ;; filename, which is not useful here since I keep my inbox in 1 file.
           (org-agenda-prefix-format '((tags . "  ")))
+          ;; Since we only care about top-level entries under "Tasks", tag inheritance
+          ;; isn't relevant here. Disabling it to hopefully speed things up.
+          (org-agenda-use-tag-inheritance nil)
         )
       )
       ("os" "Scheduled"
@@ -635,6 +638,10 @@ are equal return t."
           ;; The description of the format string is in `org-agenda-prefix-format',
           ;; here we just use the default without `%c'.
           (org-agenda-prefix-format '((agenda . " %i %?-12t% s")))
+          ;; By default, tags are inherited. I don't use tag inheritance in my task
+          ;; organization, so disabling them removes some clutter from the agenda
+          ;; view itself.
+          (org-agenda-use-tag-inheritance nil)
         )
       )
       ("op" "Projects"
