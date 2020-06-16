@@ -615,7 +615,7 @@ are equal return t."
           (org-agenda-sorting-strategy '(user-defined-down))
           ;; Override the default prefix used for the item display on the agenda page.
           ;; Normally this will show the category, "notes:    ", as derived from the
-          ;; filename, which is not useful here.
+          ;; filename, which is not useful here since I keep my inbox in 1 file.
           (org-agenda-prefix-format '((tags . "  ")))
         )
       )
@@ -628,6 +628,12 @@ are equal return t."
           (org-agenda-span 2)
           ;; Start week on today
           (org-agenda-start-on-weekday nil)
+          ;; Override the default prefix used for the item display on the agenda page.
+          ;; Normally this will show the category, "notes:    ", as derived from the
+          ;; filename, which is not useful here since all my tasks are in 1 file.
+          ;; The description of the format string is in `org-agenda-prefix-format',
+          ;; here we just use the default without `%c'.
+          (org-agenda-prefix-format '((agenda . " %i %?-12t% s")))
         )
       )
       ("op" "Projects"
