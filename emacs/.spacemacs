@@ -667,6 +667,13 @@ are equal return t."
           (org-agenda-overriding-header "Available tasks:")
         )
       )
+      ("or" "Recurring tasks"
+        ;; Any date with a "+" probably has a repeater
+        search "+{SCHEDULED: <.+?\\+.+?>}"
+        (
+          (org-agenda-overriding-header "Recurring tasks:")
+        )
+      )
     )
   )
 
