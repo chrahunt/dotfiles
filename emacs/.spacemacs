@@ -688,6 +688,12 @@ are equal return t."
 
   ;; Raise an error instead of editing hidden text
   (setq org-catch-invisible-edits 'error)
+
+  ;; Don't confirm when executing source blocks in my default notes file, since I do it often
+  ;; and don't paste unsafe code blocks there.
+  (setq org-confirm-babel-evaluate
+    (lambda (language body)
+      (not (string= (buffer-file-name) org-default-notes-file))))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
