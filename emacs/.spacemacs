@@ -700,6 +700,14 @@ are equal return t."
   ;; Just record the time because I can manually add a note if desired.
   (setq org-log-reschedule 'time)
   (setq org-log-redeadline 'time)
+
+  ;; By default, evil mode search will jump to the next entry and highlight all entries
+  ;; in the buffer. I don't want this behavior, because in large files when starting to
+  ;; type a query it is very slow (multiple seconds). This might be related to having
+  ;; collapsed sections making a lot more text "within the buffer" than would be normally.
+  ;; I also think the movement of the buffer is distracting. Setting this to `nil' disables
+  ;; the behavior.
+  (setq evil-ex-search-interactive nil)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
