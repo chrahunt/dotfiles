@@ -615,19 +615,33 @@ are equal return t."
           (org-agenda-sorting-strategy '(user-defined-down))
           ;; Override the default prefix used for the item display on the agenda page.
           ;; Normally this will show the category, "notes:    ", as derived from the
-          ;; filename, which is not useful here.
+          ;; filename, which is not useful here since I keep my inbox in 1 file.
           (org-agenda-prefix-format '((tags . "  ")))
+          ;; Since we only care about top-level entries under "Tasks", tag inheritance
+          ;; isn't relevant here. Disabling it to hopefully speed things up.
+          (org-agenda-use-tag-inheritance nil)
         )
       )
       ("os" "Scheduled"
         agenda ""
         (
-          ;; Only show scheduled timestamps (not deadline or timestamp)
-          (org-agenda-entry-types '(:scheduled))
+          ;; Show scheduled items or appointments. Deadlines are handled
+          ;; as part of higher-level planning.
+          (org-agenda-entry-types '(:scheduled :timestamp))
           ;; Show today and tomorrow
           (org-agenda-span 2)
           ;; Start week on today
           (org-agenda-start-on-weekday nil)
+          ;; Override the default prefix used for the item display on the agenda page.
+          ;; Normally this will show the category, "notes:    ", as derived from the
+          ;; filename, which is not useful here since all my tasks are in 1 file.
+          ;; The description of the format string is in `org-agenda-prefix-format',
+          ;; here we just use the default without `%c'.
+          (org-agenda-prefix-format '((agenda . " %i %?-12t% s")))
+          ;; By default, tags are inherited. I don't use tag inheritance in my task
+          ;; organization, so disabling them removes some clutter from the agenda
+          ;; view itself.
+          (org-agenda-use-tag-inheritance nil)
         )
       )
       ("op" "Projects"
@@ -653,6 +667,13 @@ are equal return t."
           (org-agenda-overriding-header "Available tasks:")
         )
       )
+      ("or" "Recurring tasks"
+        ;; Any date with a "+" probably has a repeater
+        search "+{SCHEDULED: <.+?\\+.+?>}"
+        (
+          (org-agenda-overriding-header "Recurring tasks:")
+        )
+      )
     )
   )
 
@@ -667,6 +688,18 @@ are equal return t."
 
   ;; Raise an error instead of editing hidden text
   (setq org-catch-invisible-edits 'error)
+
+  ;; Don't confirm when executing source blocks in my default notes file, since I do it often
+  ;; and don't paste unsafe code blocks there.
+  (setq org-confirm-babel-evaluate
+    (lambda (language body)
+      (not (string= (buffer-file-name) org-default-notes-file))))
+
+  ;; Log notes into LOGBOOK drawer instead of the top of the note.
+  (setq org-log-into-drawer t)
+  ;; Just record the time because I can manually add a note if desired.
+  (setq org-log-reschedule 'time)
+  (setq org-log-redeadline 'time)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
