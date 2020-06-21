@@ -694,6 +694,12 @@ are equal return t."
   (setq org-confirm-babel-evaluate
     (lambda (language body)
       (not (string= (buffer-file-name) org-default-notes-file))))
+
+  ;; Log notes into LOGBOOK drawer instead of the top of the note.
+  (setq org-log-into-drawer t)
+  ;; Just record the time because I can manually add a note if desired.
+  (setq org-log-reschedule 'time)
+  (setq org-log-redeadline 'time)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
