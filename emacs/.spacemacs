@@ -68,6 +68,7 @@ This function should only modify configuration layer settings."
    '(
      jq-mode
      org-drill
+     ox-taskjuggler
    )
 
    ;; A list of packages that cannot be updated.
@@ -472,6 +473,7 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
   (require 'org-drill)
+  (require 'ox-taskjuggler)
   ;; Pull from environment, since I use a different path on different machines.
   (setq org-directory (substitute-in-file-name "${EMACS_ORG_DIRECTORY}"))
   (setq org-default-notes-file (concat org-directory "/notes.org"))
