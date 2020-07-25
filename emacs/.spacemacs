@@ -533,20 +533,7 @@ before packages are loaded."
   (spacemacs/declare-prefix "o" "custom")
   (spacemacs/declare-prefix-for-mode 'org-mode "o" "custom")
 
-  ;; Open new frame into current buffer.
-  ;; Derived from https://stackoverflow.com/a/47333316/1698058
-  (defun my/clone-indirect-buffer-other-frame ()
-    "Like `clone-indirect-buffer' but display in another window."
-    ;; Use display-buffer-overriding-action to override purpose, which by default
-    ;; opens the buffer in the same window.
-    (interactive
-      (let ((display-buffer-overriding-action '((display-buffer-pop-up-frame))))
-        (clone-indirect-buffer nil t nil)
-      )
-    )
-  )
 
-  (spacemacs/set-leader-keys "on" 'my/clone-indirect-buffer-other-frame)
 
   ;; Required, otherwise on WSL the frame is created with squished features
   ;; that don't resolve until resizing the frame.

@@ -15,6 +15,7 @@
     (org-in-buffer-capture-templates :location local)
     (org-download-z :location local)
     (use-browser-envvar :location local)
+    (cibof :location local)
   )
 )
 
@@ -104,4 +105,12 @@
 
 (defun chrahunt/init-use-browser-envvar ()
   (use-package use-browser-envvar)
+)
+
+(defun chrahunt/init-cibof ()
+  (use-package cibof
+    :config
+    ;; *b*uffer > *N*ew > *F*rame
+    (spacemacs/set-leader-keys "bNF" #'clone-indirect-buffer-other-frame)
+  )
 )
