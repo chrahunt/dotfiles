@@ -14,13 +14,13 @@ Setup
 
 Deploy
 
-    make
+    nox -e all -- install
 
 See files changed
 
-    make check
+    nox -e all -- check
 
-Add other dotfiles roots into `~/.dotfiles.d/`
+Add other dotfiles roots into `~/.dotfiles.d/`.
 
 ## details
 
