@@ -1,8 +1,8 @@
-.PHONY: all stow unstow test generated
+.PHONY: all install unstow check generated
 
-all: stow
+all: install
 
-stow: generated
+install: generated
 	@for d in ~/.dotfiles.d/*/; do \
 	    echo "Stowing $$d"; \
 	    cd "$$d"; \
@@ -18,13 +18,14 @@ unstow:
 	    cd - >/dev/null; \
 	done
 
-test: generated
+check: generated
 	for d in ~/.dotfiles.d/*; do \
 	    echo "Testing $$d"; \
 	    cd "$$d"; \
 	    stow --dir "$$PWD" --target "$$HOME" -v --simulate */; \
 	    cd - >/dev/null; \
 	done
+	$(MAKE) -C emacs
 
 generated:
 	./.dotfiles/combine-files-py --match-dir-name .editrc.d ~/.dotfiles.d/* > editline/.editrc

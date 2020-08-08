@@ -18,7 +18,7 @@ Deploy
 
 See files changed
 
-    make test
+    make check
 
 Add other dotfiles roots into `~/.dotfiles.d/`
 
