@@ -67,6 +67,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages
    '(
      jq-mode
+     org-drill
    )
 
    ;; A list of packages that cannot be updated.
@@ -470,6 +471,7 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+  (require 'org-drill)
   ;; Pull from environment, since I use a different path on different machines.
   (setq org-directory (substitute-in-file-name "${EMACS_ORG_DIRECTORY}"))
   (setq org-default-notes-file (concat org-directory "/notes.org"))
