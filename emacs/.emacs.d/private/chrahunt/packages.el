@@ -7,6 +7,7 @@
     ;; Provides "vim-sneak"-behavior: s<2 characters> jumps to the next
     ;; instance of those two characters in the buffer.
     evil-snipe
+    (ol-org-id :location local)
     org
     ;; org-bullets has several issues:
     ;; - doesn't respect org-hide font face: https://github.com/sabof/org-bullets/pull/19
@@ -113,4 +114,8 @@
     ;; *b*uffer > *N*ew > *F*rame
     (spacemacs/set-leader-keys "bNF" #'clone-indirect-buffer-other-frame)
   )
+)
+
+(defun chrahunt/init-ol-org-id ()
+  (use-package ol-org-id)
 )

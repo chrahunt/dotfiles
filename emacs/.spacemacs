@@ -526,14 +526,171 @@ before packages are loaded."
   ;; Set default, to avoid being prompted "Symbolic link to Git-controlled
   ;; source file; follow link?" when editing .spacemacs. This disables VC-
   ;; related features, but I don't currently use those.
-  ;; TODO: Fix this, since it doesn't work.
-  (setq vs-follow-symlinks nil)
+  (setq vc-follow-symlinks nil)
 
   ;; Custom key bindings setup. "o" is reserved for user-use
   (spacemacs/declare-prefix "o" "custom")
   (spacemacs/declare-prefix-for-mode 'org-mode "o" "custom")
 
+  (defun set-org-id-open-links-in-same-buffer ()
+    "Helper function for setting buffer-local
+`org-id-open-links-in-same-buffer'."
+    (setq-local org-id-open-links-in-same-buffer t))
 
+  (defun chrahunt/links--org-get-agenda-file-buffer-same-advice (buf)
+    (let ((base-buf (buffer-base-buffer)))
+      (if (eq base-buf buf)
+          (current-buffer)
+        buf)))
+
+  (defmacro with-advice-added (symbol where function &rest body)
+    "Temporarily advise SYMBOL with FUNCTION according to WHERE while executing
+BODY.
+
+\(fn SYMBOL WHERE FUNCTION BODY...)"
+    (let ((symbol-var (make-symbol "symbol-var"))
+          (where-var (make-symbol "where-var"))
+          (function-var (make-symbol "function-var")))
+      ;; We assign to separate non-conflicting variables to only evaluate
+      ;; our arguments once, in case they are not symbols/literals.
+      `(let ((,symbol-var ,symbol)
+             (,where-var ,where)
+             (,function-var ,function))
+         (advice-add ,symbol-var ,where-var ,function-var)
+         (unwind-protect
+             ,(macroexp-progn body)
+           (advice-remove ,symbol-var ,function-var)))))
+
+  (defun chrahunt/links--org-id-find-in-same-buffer (id &optional markerp)
+    "`org-id-find' delegates to `org-get-agenda-file-buffer', which
+unconditionally retrieves a base buffer that contains the id. We customize the
+behavior by returning the current buffer if the retrieved base buffer is the
+same as this buffer's base."
+    (with-advice-added 'org-get-agenda-file-buffer
+                       :filter-return
+                       #'chrahunt/links--org-get-agenda-file-buffer-same-advice
+      (org-id-find id markerp)))
+
+  (setq org-id-open-links-in-same-buffer nil)
+
+  (defun chrahunt/links--indirect-internal-handler ()
+    "Open id-based links in the same buffer, if `org-id-open-links-in-same-buffer'
+is set."
+    ;; Inspired by org-open-at-point and org-id-open, which is set as the
+    ;; default handler for "id"-type links.
+    (let ((is-indirectp (buffer-base-buffer)))
+      (when (and is-indirectp org-id-open-links-in-same-buffer)
+        (let ((context (org-element-lineage (org-element-context) '(link) t)))
+          (when context
+            (let* ((link (cadr context))
+                   (type (plist-get link :type))
+                   (path (plist-get link :path)))
+              (when (string= type "id")
+                ;; By default org-id-open does both the finding and the
+                ;; switching. We want to separate the behavior explicitly
+                ;; here so it is less confusing and easier to customize later.
+                (let* ((m (chrahunt/links--org-id-find-in-same-buffer path 'marker))
+                       (buf (marker-buffer m)))
+                  ;; Our override is only relevant if the logic resulted in a buffer
+                  ;; that was the same as our current one. If not, then we'll return
+                  ;; nil and fall back to whatever was going to happen in
+                  ;; `org-open-at-point'.
+                  (when (eq buf (current-buffer))
+                    (goto-char m)
+                    (move-marker m nil)
+                    (org-show-context)
+                    ;; Terminates further link processing within `org-open-at-point'.
+                    t)))))))))
+
+  ;; Override default link handlers, conditional on our callback returning non-`nil'.
+  ;; Append, so that other hook functions can change state if needed.
+  (add-hook 'org-open-at-point-functions #'chrahunt/links--indirect-internal-handler)
+
+  (defmacro with-hook-added (hook fn &rest body)
+    "Temporarily add FN to HOOK while executing BODY.
+
+\(fn HOOK FN BODY...)"
+    (let ((hook-var (make-symbol "hook-var"))
+          (hook-val (make-symbol "hook-val")))
+      ;; We assign to separate non-conflicting variables to only evaluate
+      ;; our arguments once, in case they are not symbols/literals.
+      `(let ((,hook-var ,hook)
+             (,hook-val ,fn))
+         (add-hook ,hook-var ,hook-val)
+         (unwind-protect
+             ,(macroexp-progn body)
+           (remove-hook ,hook-var ,hook-val)))))
+
+  (defun chrahunt/set-open-links-in-same-buffer-if-called-interactively (orig-fun &rest args)
+    (interactive)
+    (if (called-interactively-p 'any)
+        (with-hook-added 'clone-indirect-buffer-hook
+                         #'set-org-id-open-links-in-same-buffer
+          ;; TODO: What about args? Does prefix get passed through?
+          (call-interactively orig-fun))
+      (apply orig-fun args)))
+
+  ;; We advise existing functions instead of e.g. creating new commands so that:
+  ;;
+  ;; 1. Everything looks the same as anyone else running spacemacs
+  ;; 2. We don't have to worry about setting the description of the keys to
+  ;;    match the names of the functions
+  ;; 3. We don't have to worry about forgetting to use a special function one
+  ;;    time later on and not getting the expected behavior
+  ;; These are all the functions related to making indirect buffers immediately visible
+  ;; in the spacemacs buffer command selection, add more if I start to use any more.
+  (let ((indirect-buffer-functions (list
+                                     'make-indirect-buffer
+                                     'clone-indirect-buffer
+                                     'clone-indirect-buffer-other-frame
+                                     'clone-indirect-buffer-other-window
+                                     'clone-indirect-buffer-other-window-without-purpose)))
+    (dolist (fn indirect-buffer-functions)
+      (advice-add fn
+                  :around
+                  #'chrahunt/set-open-links-in-same-buffer-if-called-interactively)))
+
+  ;; We want to be able to S-RET on a link and expect it to open a new frame with the link
+  ;; opened inside it in an indirect buffer, where applicable. We only want the new frame
+  ;; behavior to happen when it is explicitly requested and we are on an "id" link. To
+  ;; do it we emulate part of the 'org-open-at-point function until we determine that we're
+  ;; on an id link, spawn the new frame with the indirect buffer, and then execute
+  ;; org-open-at-point.
+  ;; This relies on the fix for internal indirect buffers
+  ;; This gives us a few nice properties:
+  ;; 1. We don't step on any registered org-open-at-point hooks
+  ;; 2. Not dependent on the order of extension loading or hook registration
+  ;; 3. Respects any wrapper around clone-indirect-buffer-other-frame
+  (defun chrahunt/org-open-at-point-indirect-buffer-other-frame ()
+    (interactive)
+    (let ((context (org-element-lineage (org-element-context) '(link) t)))
+      (when context
+        (let* ((link (cadr context))
+               (type (plist-get link :type))
+               (path (plist-get link :path)))
+          (when (string= type "id")
+            ;; By default links do not navigate in the same indirect buffer. We set this to ensure
+            ;; that they are.
+            (with-hook-added 'clone-indirect-buffer-hook
+                             #'set-org-id-open-links-in-same-buffer
+              (clone-indirect-buffer-other-frame nil))))))
+    ;; At this point, if applicable, we're in the context of the new buffer in the new frame, so
+    ;; navigate to the link like usual.
+    (org-open-at-point))
+
+  ;; Map S-RET to open id links in an indirect buffer in a new frame.
+  ;; Terminal
+  (define-key org-mode-map (kbd "S-RET") #'chrahunt/org-open-at-point-indirect-buffer-other-frame)
+  ;; GUI
+  (define-key org-mode-map (kbd "S-<return>") #'chrahunt/org-open-at-point-indirect-buffer-other-frame)
+
+  ;; By default, indirect buffer functions will inherit the state of the base
+  ;; buffer, not the current (possibly indirect) buffer. In order to maintain
+  ;; the context for making the new indirect buffer in the first place, we preserve
+  ;; the properties of the indirect buffer.
+  ;; Other code may make use of `clone-indirect-buffer-hook', so we run before that, so
+  ;; that any other visibility changes will take place as-expected.
+  ;; TODO
 
   ;; Required, otherwise on WSL the frame is created with squished features
   ;; that don't resolve until resizing the frame.
@@ -543,7 +700,7 @@ before packages are loaded."
   ;; Enable inline evaluation of Python source blocks.
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((python . t)))
+   '((python . t) (dot . t) (emacs-lisp . t) (shell . t) (jq . t)))
 
   ;; Prevent src block auto-indentation
   ;; https://github.com/syl20bnr/spacemacs/issues/13255
@@ -695,6 +852,8 @@ are equal return t."
   ;; I also think the movement of the buffer is distracting. Setting this to `nil' disables
   ;; the behavior.
   (setq evil-ex-search-interactive nil)
+
+  (setq org-export-backends '(ascii html latex md))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will

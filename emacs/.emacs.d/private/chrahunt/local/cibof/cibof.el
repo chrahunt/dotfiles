@@ -4,9 +4,6 @@
 ;; Version: 1.0
 ;; Package-Requires: ()
 
-(defvar clone-indirect-buffer-other-frame-hook nil
-  "Hook called after an indirect buffer is cloned to another frame.")
-
 ;;;###autoload
 (defun clone-indirect-buffer-other-frame (newname &optional norecord)
   "Like `clone-indirect-buffer' but display in another frame."
@@ -25,8 +22,7 @@
          ; callbacks (like purpose).
          (frame (make-frame)))
     (select-frame frame)
-    (switch-to-buffer buf nil 'force-same-window))
-    (run-hooks 'clone-indirect-buffer-other-frame-hook))
+    (switch-to-buffer buf nil 'force-same-window)))
 
 (provide 'cibof)
 
