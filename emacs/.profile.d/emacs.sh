@@ -9,3 +9,6 @@ else
     # connect to it.
     alias em="emacsclient -cn"
 fi
+
+path_append "$HOME/.cask/bin"
+path_append "$HOME/.evm/bin"

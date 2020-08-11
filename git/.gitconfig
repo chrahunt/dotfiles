@@ -54,3 +54,5 @@ insteadOf = https://git.heroku.com/
 helper = /home/chris/.mozbuild/git-cinnabar/git-cinnabar-helper
 [push]
 default = current
+[pull]
+ff = only

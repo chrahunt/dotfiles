@@ -5,3 +5,4 @@
 # Repo-specific metadata that may be in each package.
 ^/README\.md
 \.gitignore
+^/Makefile
