@@ -861,6 +861,24 @@ are equal return t."
   (setq evil-ex-search-interactive nil)
 
   (setq org-export-backends '(ascii html latex md))
+
+  (defun chrahunt/org-agenda-goto-stbow-advice (args)
+    (let ((buffer (car args))
+          other-buffer)
+      (save-window-excursion
+        (other-window 1)
+        (setq other-buffer (current-buffer)))
+      (if (eq buffer (buffer-base-buffer other-buffer))
+          (list other-buffer)
+        (list buffer))))
+
+  (defun chrahunt/org-agenda-goto-advice (oldfun &rest args)
+    (with-advice-added 'switch-to-buffer-other-window
+                       :filter-args
+                       #'chrahunt/org-agenda-goto-stbow-advice
+      (apply oldfun args)))
+
+  (advice-add 'org-agenda-goto :around #'chrahunt/org-agenda-goto-advice)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
