@@ -50,7 +50,7 @@ same as this buffer's base."
     (org-id-find id markerp)))
 
 (defun ol-org-id--get-current-id-link ()
-  "If we're on an "id"-type link, return it."
+  "If we're on an 'id'-type link, return it."
   (let ((context (org-element-lineage (org-element-context) '(link) t)))
     (when context
       (let* ((link (cadr context))
