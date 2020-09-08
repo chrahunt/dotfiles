@@ -1,0 +1,17 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "git_bark"
+author = "Chris Hunt"
+author-email = "chrahunt@gmail.com"
+home-page = "https://github.com/chrahunt/dotfiles"
+requires-python = ">=3.6"
+requires = []
+
+[tool.flit.metadata.requires-extra]
+test = ["pytest"]
+
+[tool.flit.scripts]
+git-bark = "git_bark.__main__:main"
