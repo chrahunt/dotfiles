@@ -1,0 +1,20 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "backup"
+author = "Chris Hunt"
+author-email = "chrahunt@gmail.com"
+home-page = "https://github.com/chrahunt/dotfiles"
+requires-python = ">=3.6"
+requires = [
+    "click",
+    "statsd",
+]
+
+[tool.flit.metadata.requires-extra]
+test = ["pytest"]
+
+[tool.flit.scripts]
+backup = "backup.__main__:main"

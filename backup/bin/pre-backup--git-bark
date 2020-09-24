@@ -1,0 +1,5 @@
+#!/bin/bash
+actual_parent="$(dirname "$(readlink -f "$0")")"
+python_path="$actual_parent/../.nox/build-3-8/bin/python"
+module_path="$actual_parent/pre_backup_git_bark.py"
+exec "$python_path" "$module_path" "$@"
