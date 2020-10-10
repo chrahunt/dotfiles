@@ -1,1 +1,7 @@
-\.gitignore_global\.d
+^/.nox/*
+^/.pytest_cache/*
+^/__pycache__/*
+^/noxfile.py
+^/pyproject.toml
+^/tests/*
+^/src/*
