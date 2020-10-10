@@ -54,6 +54,7 @@ This function should only modify configuration layer settings."
      ;; syntax-checking
      ;; treemacs
      ;; version-control
+     pdf
      chrahunt
      )
 
@@ -64,11 +65,22 @@ This function should only modify configuration layer settings."
    ;; To use a local version of a package, use the `:location' property:
    ;; '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages
-   '(
+   dotspacemacs-additional-packages '(
+     ;; Provides yaml highlighting in src blocks.
+     yaml-mode
+     org-noter
+     ;; Backup
+     git-auto-commit-mode
+     ;; dependencies
+     org-edna
+     ;; org-babel rust support
+     rustic
+     ;; org-babel jq support
      jq-mode
+     ;; spaced repetition
      org-drill
-     ox-taskjuggler
+     ;; project management
+     ;ox-taskjuggler
    )
 
    ;; A list of packages that cannot be updated.
@@ -109,9 +121,9 @@ It should only modify the values of Spacemacs settings."
    ;; portable dumper in the cache directory under dumps sub-directory.
    ;; To load it when starting Emacs add the parameter `--dump-file'
    ;; when invoking Emacs 27.1 executable on the command line, for instance:
-   ;;   ./emacs --dump-file=~/.emacs.d/.cache/dumps/spacemacs.pdmp
-   ;; (default spacemacs.pdmp)
-   dotspacemacs-emacs-dumper-dump-file "spacemacs.pdmp"
+   ;;   ./emacs --dump-file=$HOME/.emacs.d/.cache/dumps/spacemacs-27.1.pdmp
+   ;; (default spacemacs-27.1.pdmp)
+   dotspacemacs-emacs-dumper-dump-file (format "spacemacs-%s.pdmp" emacs-version)
 
    ;; If non-nil ELPA repositories are contacted via HTTPS whenever it's
    ;; possible. Set it to nil if you have no way to use HTTPS in your
@@ -130,6 +142,13 @@ It should only modify the values of Spacemacs settings."
    ;; performance issues due to garbage collection operations.
    ;; (default '(100000000 0.1))
    dotspacemacs-gc-cons '(100000000 0.1)
+
+   ;; Set `read-process-output-max' when startup finishes.
+   ;; This defines how much data is read from a foreign process.
+   ;; Setting this >= 1 MB should increase performance for lsp servers
+   ;; in emacs 27.
+   ;; (default (* 1024 1024))
+   dotspacemacs-read-process-output-max (* 1024 1024)
 
    ;; If non-nil then Spacelpa repository is the primary source to install
    ;; a locked version of packages. If nil then Spacemacs will install the
@@ -158,6 +177,11 @@ It should only modify the values of Spacemacs settings."
    ;; section of the documentation for details on available variables.
    ;; (default 'vim)
    dotspacemacs-editing-style 'vim
+
+   ;; If non-nil show the version string in the Spacemacs buffer. It will
+   ;; appear as (spacemacs version)@(emacs version)
+   ;; (default t)
+   dotspacemacs-startup-buffer-show-version t
 
    ;; Specify the startup banner. Default value is `official', it displays
    ;; the official spacemacs logo. An integer value is the index of text
@@ -235,8 +259,10 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-major-mode-leader-key ","
 
    ;; Major mode leader key accessible in `emacs state' and `insert state'.
-   ;; (default "C-M-m")
-   dotspacemacs-major-mode-emacs-leader-key "C-M-m"
+   ;; (default "C-M-m" for terminal mode, "<M-return>" for GUI mode).
+   ;; Thus M-RET should work as leader key in both GUI and terminal modes.
+   ;; C-M-m also should work in terminal mode, but not in GUI mode.
+   dotspacemacs-major-mode-emacs-leader-key (if window-system "<M-return>" "C-M-m")
 
    ;; These variables control whether separate commands are bound in the GUI to
    ;; the key pairs `C-i', `TAB' and `C-m', `RET'.
@@ -264,7 +290,7 @@ It should only modify the values of Spacemacs settings."
    ;; Size (in MB) above which spacemacs will prompt to open the large file
    ;; literally to avoid performance issues. Opening a file literally means that
    ;; no major mode or minor modes are active. (default is 1)
-   dotspacemacs-large-file-size 1
+   dotspacemacs-large-file-size 10
 
    ;; Location where to auto-save files. Possible values are `original' to
    ;; auto-save the file in-place, `cache' to auto-save the file to another
@@ -434,6 +460,22 @@ It should only modify the values of Spacemacs settings."
    ;; (default nil)
    dotspacemacs-whitespace-cleanup nil
 
+   ;; If non nil activate `clean-aindent-mode' which tries to correct
+   ;; virtual indentation of simple modes. This can interfer with mode specific
+   ;; indent handling like has been reported for `go-mode'.
+   ;; If it does deactivate it here.
+   ;; (default t)
+   dotspacemacs-use-clean-aindent-mode nil
+
+   ;; If non-nil activate `snoopy-mode' which shifts your number row
+   ;; to match the set of signs given in `dotspacemacs-snoopy-keyrow'
+   ;; in programming modes (insert-mode only). (default nil)
+   dotspacemacs-use-snoopy-mode nil
+
+   ;; Text of shifted values from your
+   ;; keyboard's number row. (default '!@#$%^&*()')
+   dotspacemacs-snoopy-keyrow "!@#$%^&*()"
+
    ;; Either nil or a number of seconds. If non-nil zone out after the specified
    ;; number of seconds. (default nil)
    dotspacemacs-zone-out-when-idle nil
@@ -441,7 +483,11 @@ It should only modify the values of Spacemacs settings."
    ;; Run `spacemacs/prettify-org-buffer' when
    ;; visiting README.org files of Spacemacs.
    ;; (default nil)
-   dotspacemacs-pretty-docs nil))
+   dotspacemacs-pretty-docs nil
+
+   ;; If nil the home buffer shows the full path of agenda items
+   ;; and todos. If non nil only the file name is shown.
+   dotspacemacs-home-shorten-agenda-source nil))
 
 (defun dotspacemacs/user-env ()
   "Environment variables setup.
@@ -464,7 +510,7 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
 This function is called only while dumping Spacemacs configuration. You can
 `require' or `load' the libraries of your choice that will be included in the
 dump."
-)
+  )
 
 (defun dotspacemacs/user-config ()
   "Configuration for user code:
@@ -474,11 +520,51 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
   (require 'org-drill)
   (require 'ox-taskjuggler)
+  ;; Do not save the list of packages, since packages and dependencies are
+  ;; managed by spacemacs.
+  (defun package--save-selected-packages (&rest opts) nil)
   ;; Pull from environment, since I use a different path on different machines.
   (setq org-directory (substitute-in-file-name "${EMACS_ORG_DIRECTORY}"))
   (setq org-default-notes-file (concat org-directory "/notes.org"))
   ;; Set default agenda files to notes file, since I use a single note everywhere.
   (setq org-agenda-files `(,org-default-notes-file))
+  (setq evil-want-Y-yank-to-eol nil)
+  (setq org-fontify-whole-heading-line t)
+  (setq org-goto-auto-isearch nil)
+  (setq org-hide-leading-stars t)
+  (setq spacemacs-large-file-modes-list
+       '(archive-mode
+         tar-mode
+         jka-compr
+         git-commit-mode
+         image-mode
+         doc-view-mode
+         doc-view-mode-maybe
+         ebrowse-tree-mode
+         pdf-view-mode
+         tags-table-mode
+         fundamental-mode
+         org-mode))
+
+  ;; Push any updates to auto-commited files automatically
+  (setq-default gac-automatically-push-p t)
+
+  ;; Auto-save org-mode files after emacs is idle for 10s
+  (defun save-org-mode-files ()
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (eq major-mode 'org-mode)
+          (if (and (buffer-modified-p) (buffer-file-name))
+            (save-buffer))))))
+
+  (run-with-idle-timer 10 t 'save-org-mode-files)
+
+  ;; No UTF-8 bullets
+  (setq org-superstar-headline-bullets-list '("*"))
+
+  ;; I do not indent content in org nodes because I see each node as an individual note.
+  ;; Do not change indentation when promoting/demoting
+  (setq org-adapt-indentation nil)
 
   (setq org-capture-templates '(
     ;; Files default to org-default-notes-file
@@ -795,6 +881,26 @@ are equal return t."
           (org-agenda-use-tag-inheritance nil)
         )
       )
+      ("on" "Related notes"
+        (lambda (query-string)
+          (interactive "P")
+          (let*
+            (
+              ; this doesn't work because org-capture-fill-template works off of a buffer, not
+              ; the template string directly...
+              ;(query-string (org-capture-fill-template query-string))
+              (org-agenda-custom-commands `(("x" "x" tags ,query-string)))
+            )
+            (org-agenda nil "x")
+          )
+        )
+        "CONTEXT={%(org-id-get-create)}"
+        (
+         ;(org-agenda-overriding-header "Related notes:")
+         ;; I don't use these.
+         (org-use-tag-inheritance nil)
+        )
+      )
       ("op" "Projects"
         search ":project:"
         ;; Specify format
@@ -888,22 +994,6 @@ are equal return t."
 This is an auto-generated function, do not modify its content directly, use
 Emacs customize menu instead.
 This function is called at the very end of Spacemacs initialization."
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(evil-want-Y-yank-to-eol nil)
- '(org-adapt-indentation nil)
- '(org-fontify-whole-heading-line t)
- '(org-goto-auto-isearch nil)
- '(org-hide-leading-stars t)
- '(package-selected-packages
-   (quote
-    (org-drill persist evil-snipe ws-butler writeroom-mode visual-fill-column winum volatile-highlights vi-tilde-fringe uuidgen treemacs-projectile treemacs-magit treemacs-evil treemacs ht pfuture toc-org symon symbol-overlay string-inflection spaceline-all-the-icons spaceline powerline smeargle restart-emacs rainbow-delimiters popwin persp-mode password-generator paradox spinner overseer orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-cliplink org-bullets org-brain open-junk-file nameless move-text magit-svn magit-gitflow magit-popup macrostep lorem-ipsum link-hint indent-guide hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-xref helm-themes helm-swoop helm-purpose window-purpose imenu-list helm-projectile projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore request helm-git-grep helm-flx helm-descbinds helm-ag google-translate golden-ratio gnuplot gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link flycheck-package package-lint flycheck pkg-info epl let-alist flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit transient git-commit with-editor evil-lisp-state evil-lion evil-indent-plus evil-iedit-state iedit evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens smartparens paredit evil-args evil-anzu anzu eval-sexp-fu elisp-slime-nav editorconfig dumb-jump doom-modeline shrink-path all-the-icons memoize f dash s devdocs define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile packed aggressive-indent ace-window ace-link ace-jump-helm-line helm avy helm-core popup which-key use-package pcre2el org-plus-contrib hydra lv hybrid-mode font-lock+ evil goto-chg undo-tree dotenv-mode diminish bind-map bind-key async)))
- '(spacemacs-large-file-modes-list
-   (quote
-    (archive-mode tar-mode jka-compr git-commit-mode image-mode doc-view-mode doc-view-mode-maybe ebrowse-tree-mode pdf-view-mode tags-table-mode fundamental-mode org-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

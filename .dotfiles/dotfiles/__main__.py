@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from io import StringIO
 from itertools import chain
 from pathlib import Path
-from typing import Iterable, Iterator, List, Tuple
+from typing import Iterable, Iterator, List, Optional, Tuple
 
 import click
 
@@ -37,6 +37,42 @@ def non_hidden_subdirs(path):
 
 def stow(*args):
     subprocess.run(["stow", *args], check=True)
+
+
+def build_packages():
+    """Some packages have a build step to generate files, this takes
+    care of that.
+    """
+    def package_dirs():
+        for dotfiles in all_dotfiles():
+            for name in dotfiles.package_names:
+                yield Path(dotfiles.path) / name
+
+    def nox_has_session(noxfile: Path, session_name: str) -> bool:
+        result = subprocess.run(
+            ["nox", "--list", "-f", str(noxfile)], capture_output=True
+        )
+
+        lines = result.stdout.decode("utf-8").splitlines()
+        for line in lines:
+            if line.startswith(f"* {session_name}"):
+                return True
+        return False
+
+    def has_applicable_noxfile(package_dir) -> Optional[Path]:
+        noxfile = package_dir / "noxfile.py"
+        if not noxfile.exists():
+            return None
+        if not nox_has_session(noxfile, "build"):
+            return None
+        return noxfile
+
+
+    for package_dir in package_dirs():
+        noxfile = has_applicable_noxfile(package_dir)
+        if noxfile:
+            print(f"Running build for {package_dir}")
+            subprocess.run(["nox", "-s", "build", "-f", str(noxfile)], check=True)
 
 
 def generate_stow_local_ignore():
@@ -145,6 +181,7 @@ def uninstall():
 
 
 def generate():
+    build_packages()
     combine_files()
     generate_stow_local_ignore()
 

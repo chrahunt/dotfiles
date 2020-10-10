@@ -1,0 +1,4 @@
+#!/bin/bash
+actual_parent="$(dirname "$(readlink -f "$0")")"
+module_path="$actual_parent/../.nox/build-3-8/bin/git-bark"
+exec "$module_path" "$@"
