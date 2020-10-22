@@ -712,8 +712,9 @@ are equal return t."
 
   (defun my/org-agenda-entry-not-in-tasks ()
     (
-      let*
-      ((outline-path (org-get-outline-path)))
+      let* ((outline-path (org-get-outline-path)))
+      ;; (org-entry-end-position) would be technically more correct, but it's about 2s slower
+      ;; ~13s
       (if (not (and (eq (length outline-path) 1) (string= (car outline-path) "tasks"))) (point))
     )
   )
@@ -726,8 +727,10 @@ are equal return t."
         ;; -note - items not marked note
         ;; +TODO="TODO" - only in TODO state
         ;; -ARCHIVE_TIME={.} - where there is no ARCHIVE_TIME property
+        ;;  - trying to remove this, since I don't keep archived items in my inbox.
         ;;tags-todo "+unsorted-note+TODO=\"TODO\"-ARCHIVE_TIME={.}"
-        tags-todo "TODO=\"TODO\"-ARCHIVE_TIME={.}"
+        ;;tags-todo "TODO=\"TODO\"-ARCHIVE_TIME={.}"
+        tags-todo "TODO=\"TODO\""
         (
           ;; Ignore all entries except those under the top-level 'tasks' header
           (org-agenda-skip-function 'my/org-agenda-entry-not-in-tasks)
