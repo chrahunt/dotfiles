@@ -625,17 +625,6 @@ before packages are loaded."
   (spacemacs/declare-prefix "o" "custom")
   (spacemacs/declare-prefix-for-mode 'org-mode "o" "custom")
 
-  (defun set-org-id-open-links-in-same-buffer ()
-    "Helper function for setting buffer-local
-`org-id-open-links-in-same-buffer'."
-    (setq-local org-id-open-links-in-same-buffer t))
-
-  (defun chrahunt/links--org-get-agenda-file-buffer-same-advice (buf)
-    (let ((base-buf (buffer-base-buffer)))
-      (if (eq base-buf buf)
-          (current-buffer)
-        buf)))
-
   (defmacro with-advice-added (symbol where function &rest body)
     "Temporarily advise SYMBOL with FUNCTION according to WHERE while executing
 BODY.
@@ -654,51 +643,6 @@ BODY.
              ,(macroexp-progn body)
            (advice-remove ,symbol-var ,function-var)))))
 
-  (defun chrahunt/links--org-id-find-in-same-buffer (id &optional markerp)
-    "`org-id-find' delegates to `org-get-agenda-file-buffer', which
-unconditionally retrieves a base buffer that contains the id. We customize the
-behavior by returning the current buffer if the retrieved base buffer is the
-same as this buffer's base."
-    (with-advice-added 'org-get-agenda-file-buffer
-                       :filter-return
-                       #'chrahunt/links--org-get-agenda-file-buffer-same-advice
-      (org-id-find id markerp)))
-
-  (setq org-id-open-links-in-same-buffer nil)
-
-  (defun chrahunt/links--indirect-internal-handler ()
-    "Open id-based links in the same buffer, if `org-id-open-links-in-same-buffer'
-is set."
-    ;; Inspired by org-open-at-point and org-id-open, which is set as the
-    ;; default handler for "id"-type links.
-    (let ((is-indirectp (buffer-base-buffer)))
-      (when (and is-indirectp org-id-open-links-in-same-buffer)
-        (let ((context (org-element-lineage (org-element-context) '(link) t)))
-          (when context
-            (let* ((link (cadr context))
-                   (type (plist-get link :type))
-                   (path (plist-get link :path)))
-              (when (string= type "id")
-                ;; By default org-id-open does both the finding and the
-                ;; switching. We want to separate the behavior explicitly
-                ;; here so it is less confusing and easier to customize later.
-                (let* ((m (chrahunt/links--org-id-find-in-same-buffer path 'marker))
-                       (buf (marker-buffer m)))
-                  ;; Our override is only relevant if the logic resulted in a buffer
-                  ;; that was the same as our current one. If not, then we'll return
-                  ;; nil and fall back to whatever was going to happen in
-                  ;; `org-open-at-point'.
-                  (when (eq buf (current-buffer))
-                    (goto-char m)
-                    (move-marker m nil)
-                    (org-show-context)
-                    ;; Terminates further link processing within `org-open-at-point'.
-                    t)))))))))
-
-  ;; Override default link handlers, conditional on our callback returning non-`nil'.
-  ;; Append, so that other hook functions can change state if needed.
-  (add-hook 'org-open-at-point-functions #'chrahunt/links--indirect-internal-handler)
-
   (defmacro with-hook-added (hook fn &rest body)
     "Temporarily add FN to HOOK while executing BODY.
 
@@ -713,69 +657,6 @@ is set."
          (unwind-protect
              ,(macroexp-progn body)
            (remove-hook ,hook-var ,hook-val)))))
-
-  (defun chrahunt/set-open-links-in-same-buffer-if-called-interactively (orig-fun &rest args)
-    (interactive)
-    (if (called-interactively-p 'any)
-        (with-hook-added 'clone-indirect-buffer-hook
-                         #'set-org-id-open-links-in-same-buffer
-          ;; TODO: What about args? Does prefix get passed through?
-          (call-interactively orig-fun))
-      (apply orig-fun args)))
-
-  ;; We advise existing functions instead of e.g. creating new commands so that:
-  ;;
-  ;; 1. Everything looks the same as anyone else running spacemacs
-  ;; 2. We don't have to worry about setting the description of the keys to
-  ;;    match the names of the functions
-  ;; 3. We don't have to worry about forgetting to use a special function one
-  ;;    time later on and not getting the expected behavior
-  ;; These are all the functions related to making indirect buffers immediately visible
-  ;; in the spacemacs buffer command selection, add more if I start to use any more.
-  (let ((indirect-buffer-functions (list
-                                     'make-indirect-buffer
-                                     'clone-indirect-buffer
-                                     'clone-indirect-buffer-other-frame
-                                     'clone-indirect-buffer-other-window
-                                     'clone-indirect-buffer-other-window-without-purpose)))
-    (dolist (fn indirect-buffer-functions)
-      (advice-add fn
-                  :around
-                  #'chrahunt/set-open-links-in-same-buffer-if-called-interactively)))
-
-  ;; We want to be able to S-RET on a link and expect it to open a new frame with the link
-  ;; opened inside it in an indirect buffer, where applicable. We only want the new frame
-  ;; behavior to happen when it is explicitly requested and we are on an "id" link. To
-  ;; do it we emulate part of the 'org-open-at-point function until we determine that we're
-  ;; on an id link, spawn the new frame with the indirect buffer, and then execute
-  ;; org-open-at-point.
-  ;; This relies on the fix for internal indirect buffers
-  ;; This gives us a few nice properties:
-  ;; 1. We don't step on any registered org-open-at-point hooks
-  ;; 2. Not dependent on the order of extension loading or hook registration
-  ;; 3. Respects any wrapper around clone-indirect-buffer-other-frame
-  (defun chrahunt/org-open-at-point-indirect-buffer-other-frame ()
-    (interactive)
-    (let ((context (org-element-lineage (org-element-context) '(link) t)))
-      (when context
-        (let* ((link (cadr context))
-               (type (plist-get link :type))
-               (path (plist-get link :path)))
-          (when (string= type "id")
-            ;; By default links do not navigate in the same indirect buffer. We set this to ensure
-            ;; that they are.
-            (with-hook-added 'clone-indirect-buffer-hook
-                             #'set-org-id-open-links-in-same-buffer
-              (clone-indirect-buffer-other-frame nil))))))
-    ;; At this point, if applicable, we're in the context of the new buffer in the new frame, so
-    ;; navigate to the link like usual.
-    (org-open-at-point))
-
-  ;; Map S-RET to open id links in an indirect buffer in a new frame.
-  ;; Terminal
-  (define-key org-mode-map (kbd "S-RET") #'chrahunt/org-open-at-point-indirect-buffer-other-frame)
-  ;; GUI
-  (define-key org-mode-map (kbd "S-<return>") #'chrahunt/org-open-at-point-indirect-buffer-other-frame)
 
   ;; By default, indirect buffer functions will inherit the state of the base
   ;; buffer, not the current (possibly indirect) buffer. In order to maintain
@@ -985,6 +866,63 @@ are equal return t."
       (apply oldfun args)))
 
   (advice-add 'org-agenda-goto :around #'chrahunt/org-agenda-goto-advice)
+
+  ;; When files are opened, delegate to xdg-open on Linux instead of run-mailcap.
+  ;; This takes effect when clicking or pressing RET on file links.
+  (add-to-list 'org-file-apps-gnu '(system . "xdg-open \"%s\""))
+
+  ;; By default, emacs opens text files in emacs, but we want to open drawio files
+  ;; in drawio (via the system opener, like xdg-open above).
+  (add-to-list 'org-file-apps '("drawio" . system))
+
+  ;; Utilities for creating drawio diagrams.
+  (setq drawio-empty-diagram-contents "\
+<mxfile\
+ host=\"Electron\"\
+ modified=\"2020-10-21T23:01:12.268Z\"\
+ agent=\"draw.io/13.7.9 Electron/10.1.3\"\
+ etag=\"SgnuPUlkHG53HNGEorAc\"\
+ version=\"13.7.9\"\
+ type=\"device\">\
+<diagram id=\"jsyRF68S_4cu8rbGsDyh\"\
+ name=\"Page-1\">\
+ddGxDoMgEADQr2FHiIk7te3SyaEzkauQoGcQo+3XV4PUEtuFHI+Dg4Nw0c4XJ3t9QwWWMKpm\
+wk+Esbxgy7jCM0BGKQ3SOKM226EyL4iJm45GwZAkekTrTZ9ijV0HtU9MOodTmvZAm1btZQMH\
+qGppj3o3yuugRU53v4JpdKycxfe1MiZvMGipcPoiXhIuHKIPUTsLsGvzYl/CvvOf1c/FHHT+\
+x4Yl2M9eJskP8fIN\
+</diagram>\
+</mxfile>\
+")
+
+  (defun chrahunt/create-attached-diagram (name)
+    "Create an empty draw.io diagram as an attachment named {name}.drawio"
+    (interactive "sCreate diagram named: ")
+    (let* ((attach-dir (org-attach-dir 'get-create))
+           (attachment-name (concat name ".drawio"))
+           (absolute-attachment-path
+            (concat (file-name-as-directory attach-dir) attachment-name)))
+      (when (not (file-exists-p absolute-attachment-path))
+        (with-temp-file absolute-attachment-path
+          (insert drawio-empty-diagram-contents)))
+      (org-attach-sync)
+      attachment-name))
+
+  (defun chrahunt/create-and-open-attached-diagram (name)
+    "Create an empty draw.io diagram as an attachment named {name}.drawio, and open it."
+    (interactive "sCreate diagram named: ")
+    (let ((attachment-name (chrahunt/create-attached-diagram name)))
+      (org-attach-open-link attachment-name)
+      attachment-name))
+
+  (defun chrahunt/create-and-open-and-link-to-attached-diagram (name description)
+    "Create an empty draw.io diagram as an attachment named {name}.drawio, open it, and insert a
+link to it in the current file."
+    (interactive "sCreate diagram named: \nsLink description: ")
+    (let ((attachment-name (chrahunt/create-and-open-attached-diagram name)))
+      (org-insert-link nil (concat "attachment:" attachment-name) description)))
+
+  ;; *i*nsert > *c*hart
+  (spacemacs/set-leader-keys-for-major-mode 'org-mode "ic" #'chrahunt/create-and-open-and-link-to-attached-diagram)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
