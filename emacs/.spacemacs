@@ -985,6 +985,63 @@ are equal return t."
       (apply oldfun args)))
 
   (advice-add 'org-agenda-goto :around #'chrahunt/org-agenda-goto-advice)
+
+  ;; When files are opened, delegate to xdg-open on Linux instead of run-mailcap.
+  ;; This takes effect when clicking or pressing RET on file links.
+  (add-to-list 'org-file-apps-gnu '(system . "xdg-open \"%s\""))
+
+  ;; By default, emacs opens text files in emacs, but we want to open drawio files
+  ;; in drawio (via the system opener, like xdg-open above).
+  (add-to-list 'org-file-apps '("drawio" . system))
+
+  ;; Utilities for creating drawio diagrams.
+  (setq drawio-empty-diagram-contents "\
+<mxfile\
+ host=\"Electron\"\
+ modified=\"2020-10-21T23:01:12.268Z\"\
+ agent=\"draw.io/13.7.9 Electron/10.1.3\"\
+ etag=\"SgnuPUlkHG53HNGEorAc\"\
+ version=\"13.7.9\"\
+ type=\"device\">\
+<diagram id=\"jsyRF68S_4cu8rbGsDyh\"\
+ name=\"Page-1\">\
+ddGxDoMgEADQr2FHiIk7te3SyaEzkauQoGcQo+3XV4PUEtuFHI+Dg4Nw0c4XJ3t9QwWWMKpm\
+wk+Esbxgy7jCM0BGKQ3SOKM226EyL4iJm45GwZAkekTrTZ9ijV0HtU9MOodTmvZAm1btZQMH\
+qGppj3o3yuugRU53v4JpdKycxfe1MiZvMGipcPoiXhIuHKIPUTsLsGvzYl/CvvOf1c/FHHT+\
+x4Yl2M9eJskP8fIN\
+</diagram>\
+</mxfile>\
+")
+
+  (defun chrahunt/create-attached-diagram (name)
+    "Create an empty draw.io diagram as an attachment named {name}.drawio"
+    (interactive "sCreate diagram named: ")
+    (let* ((attach-dir (org-attach-dir 'get-create))
+           (attachment-name (concat name ".drawio"))
+           (absolute-attachment-path
+            (concat (file-name-as-directory attach-dir) attachment-name)))
+      (when (not (file-exists-p absolute-attachment-path))
+        (with-temp-file absolute-attachment-path
+          (insert drawio-empty-diagram-contents)))
+      (org-attach-sync)
+      attachment-name))
+
+  (defun chrahunt/create-and-open-attached-diagram (name)
+    "Create an empty draw.io diagram as an attachment named {name}.drawio, and open it."
+    (interactive "sCreate diagram named: ")
+    (let ((attachment-name (chrahunt/create-attached-diagram name)))
+      (org-attach-open-link attachment-name)
+      attachment-name))
+
+  (defun chrahunt/create-and-open-and-link-to-attached-diagram (name description)
+    "Create an empty draw.io diagram as an attachment named {name}.drawio, open it, and insert a
+link to it in the current file."
+    (interactive "sCreate diagram named: \nsLink description: ")
+    (let ((attachment-name (chrahunt/create-and-open-attached-diagram name)))
+      (org-insert-link nil (concat "attachment:" attachment-name) description)))
+
+  ;; *i*nsert > *c*hart
+  (spacemacs/set-leader-keys-for-major-mode 'org-mode "ic" #'chrahunt/create-and-open-and-link-to-attached-diagram)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
