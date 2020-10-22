@@ -117,5 +117,12 @@
 )
 
 (defun chrahunt/init-ol-org-id ()
-  (use-package ol-org-id)
+  (use-package ol-org-id
+    :config
+    ;; Map S-RET to open id links in an indirect buffer in a new frame, similar
+    ;; to S-click in web browsers.
+    ;; Terminal
+    (define-key org-mode-map (kbd "S-RET") #'org-open-at-point-indirect-buffer-other-frame)
+    ;; GUI
+    (define-key org-mode-map (kbd "S-<return>") #'org-open-at-point-indirect-buffer-other-frame))
 )
