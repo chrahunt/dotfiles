@@ -923,6 +923,15 @@ link to it in the current file."
 
   ;; *i*nsert > *c*hart
   (spacemacs/set-leader-keys-for-major-mode 'org-mode "ic" #'chrahunt/create-and-open-and-link-to-attached-diagram)
+
+  ;; Open "idea://" links in IntelliJ.
+  (require 'ol)
+
+  (defun org-idea-open (path _)
+    (call-process "idea" nil 0 nil path))
+
+  (org-link-set-parameters "idea"
+                           :follow #'org-idea-open)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
