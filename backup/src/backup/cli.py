@@ -9,7 +9,7 @@ from typing import Dict, NamedTuple
 import click
 from statsd import StatsClient
 
-from .filtering import get_files, get_exclude_files, get_minimal_files
+from .filtering import get_files, get_minimal_files
 from .restic import Restic
 
 
@@ -110,7 +110,6 @@ def list_files(list_type):
     files = {
         "normal": get_files,
         "minimal": get_minimal_files,
-        "excluded": get_exclude_files,
     }[list_type](Path(config.base_directory))
     print(json.dumps(files, separators=(",", ":")))
 

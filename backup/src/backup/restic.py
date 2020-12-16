@@ -3,12 +3,11 @@ import os
 import re
 import shlex
 import subprocess
-from contextlib import ExitStack, contextmanager
-from itertools import chain, repeat
+from contextlib import contextmanager
 from pathlib import Path
 from socket import gethostname
 from tempfile import TemporaryDirectory
-from typing import Callable, Iterator, List, NamedTuple, Optional
+from typing import Iterator, List, NamedTuple, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -38,36 +37,6 @@ def escape_path(path: str) -> str:
     return path
 
 
-# Exclude paths undergo dual processing:
-# 1. For paths provided on the command-line, they are interpreted as globs
-# 2. For paths in an exclude file, they are split, trimmed, and interpreted with `filepath.Glob`
-#    Also if they have a `$`, that is interpreted verbatim.
-# We know that the caller will pass newline-having paths on the command-line, so do not
-# worry about protecting trailing spaces.
-def escape_exclude_path(path: str) -> str:
-    # Normalize and make absolute. Restic strips leading whitespace and lines that
-    # start with `#`, which this avoids.
-    path = os.path.abspath(path)
-    # Restic runs all paths through go's `filepath.Glob`, so escape any characters
-    # it considers special. We use a character class for each special character
-    # because backslash-escapes don't work on Windows.
-    path = re.sub(r"([\[*?])", r"[\1]", path)
-    # Restic attempts to trim trailing whitespace from each line, so if there is
-    # any then protect it by surrounding it in a character class.
-    # The definition of whitespace according to Python and go should line up well-
-    # enough.
-    # Python regexes interpret $ as "end of string and before any newline at the end of a string"
-    # by default, but we want literally the last whitespace (including newline).
-    # But that's not applicable since we must not be passed a path with newlines.
-    if "\n" not in path:
-        path = re.sub(r"([\s])$", r"[\1]", path)
-    # On non-Windows platforms, `\` is a valid character, so escape it. Since
-    # we're not on Windows, we can backslash escape this.
-    if os.name != "nt":
-        path = path.replace("\\", "\\\\")
-    return path
-
-
 class ResticPaths(NamedTuple):
     paths_with_newline: List[str]
     paths_without_newline: List[str]
@@ -87,19 +56,6 @@ def handle_paths(paths: List[str]) -> ResticPaths:
     return ResticPaths(newline_having_paths, other_paths)
 
 
-def handle_exclude_paths(paths: List[str]) -> ResticPaths:
-    """Restic does not have a straightforward way to take a plain list of
-    exclude paths, so we escape in two ways:
-
-    1. For newline-having paths, pass them as arguments
-    2. For other paths, escape in a platform-independent way
-    """
-    escaped_paths = list(map(escape_path, paths))
-    newline_having_paths = [p for p in escaped_paths if "\n" in p]
-    other_paths = [p for p in escaped_paths if "\n" not in p]
-    return ResticPaths(newline_having_paths, other_paths)
-
-
 @contextmanager
 def escaped_paths(paths: List[str]) -> Iterator[List[str]]:
     restic_paths = handle_paths(paths)
@@ -109,18 +65,6 @@ def escaped_paths(paths: List[str]) -> Iterator[List[str]]:
         from_paths_path = Path(d) / "paths.txt"
         from_paths_path.write_text(from_paths_text, encoding="utf-8")
         yield ["--files-from", str(from_paths_path), *restic_paths.paths_with_newline]
-
-
-@contextmanager
-def escaped_exclude_paths(paths: List[str]) -> Iterator[List[str]]:
-    restic_paths = handle_exclude_paths(paths)
-
-    with TemporaryDirectory() as d:
-        from_paths_text = "\n".join(restic_paths.paths_without_newline)
-        from_paths_path = Path(d) / "paths.txt"
-        from_paths_path.write_text(from_paths_text, encoding="utf-8")
-        exclude_args = chain.from_iterable(zip(repeat("--exclude"), restic_paths.paths_with_newline))
-        yield ["--exclude-file", str(from_paths_path), *exclude_args]
 
 
 class Restic:
@@ -138,19 +82,6 @@ class Restic:
 
         logger.debug("Running: %s", " ".join(shlex.quote(a) for a in args))
         return subprocess.run(args, **kwargs)
-
-    def backup_excludes(self, include_paths: List[str], exclude_paths: List[str], **kwargs) -> subprocess.CompletedProcess:
-        args = self._host_args()
-        latest_snapshot = self._latest_snapshot()
-        if latest_snapshot is not None:
-            args.extend(["--parent", latest_snapshot])
-        if kwargs.pop("dry_run", False):
-            args.append("--dry-run")
-
-        with ExitStack() as context:
-            args.extend(context.enter_context(escaped_paths(include_paths)))
-            args.extend(context.enter_context(escaped_exclude_paths(exclude_paths)))
-            return self.run(["backup", *args], **kwargs)
 
     def backup(self, paths: List[str], **kwargs) -> subprocess.CompletedProcess:
         # In order to avoid a re-scan, we need to provide an explicit parent
