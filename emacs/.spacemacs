@@ -911,7 +911,10 @@ x4Yl2M9eJskP8fIN\
     "Create an empty draw.io diagram as an attachment named {name}.drawio, and open it."
     (interactive "sCreate diagram named: ")
     (let ((attachment-name (chrahunt/create-attached-diagram name)))
-      (org-attach-open-link attachment-name)
+      (if (fboundp 'org-attach-open-link)
+          ;; org-attach-open-link was refactored in org 9.4, drop this when 9.3 is no longer relevant
+          (org-attach-open-link attachment-name)
+        (org-attach-follow attachment-name nil))
       attachment-name))
 
   (defun chrahunt/create-and-open-and-link-to-attached-diagram (name description)
