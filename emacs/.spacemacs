@@ -548,6 +548,9 @@ before packages are loaded."
 
   ;; Push any updates to auto-commited files automatically
   (setq-default gac-automatically-push-p t)
+  ;; When inserting attachments and screenshots in org-mode, they should
+  ;; also be added and auto-committed to the repository.
+  (setq-default gac-add-additional-flag "-A .")
 
   ;; Auto-save org-mode files after emacs is idle for 10s
   (defun save-org-mode-files ()
