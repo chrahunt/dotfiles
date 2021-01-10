@@ -551,6 +551,10 @@ before packages are loaded."
   ;; When inserting attachments and screenshots in org-mode, they should
   ;; also be added and auto-committed to the repository.
   (setq-default gac-add-additional-flag "-A .")
+  ;; By default, git-auto-commit displays the result of executing git commit,
+  ;; which usually causes the minibuffer to flash and be multi-line.
+  ;; That's pretty intrusive, so I disable it.
+  (setq-default gac-silent-message-p t)
 
   ;; Auto-save org-mode files after emacs is idle for 10s
   (defun save-org-mode-files ()
