@@ -519,7 +519,6 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
   (require 'org-drill)
-  (require 'ox-taskjuggler)
   ;; Do not save the list of packages, since packages and dependencies are
   ;; managed by spacemacs.
   (defun package--save-selected-packages (&rest opts) nil)
@@ -854,7 +853,9 @@ are equal return t."
   ;; the behavior.
   (setq evil-ex-search-interactive nil)
 
-  (setq org-export-backends '(ascii html latex md))
+  ;; Org export backends can be set either by setting this variable or importing specific
+  ;; ox- packages, not both.
+  (setq org-export-backends '(ascii html latex taskjuggler md))
 
   (defun chrahunt/org-agenda-goto-stbow-advice (args)
     (let ((buffer (car args))
