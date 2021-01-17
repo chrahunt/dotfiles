@@ -75,6 +75,7 @@ def write_config(monkeypatch, tmp_path_factory):
         config = {
             "base_directory": base_directory,
             "env_command": command_text,
+            "options": {},
         }
         config_path.write_text(json.dumps(config))
 

@@ -5,9 +5,18 @@ Wrapper around restic. Generates and escapes a file list.
 Currently the top-level always-excluded paths are hard-coded, and directories
 containing a file named `.nobackup` are ignored.
 
+## getting restic
+
+This project assumes the use of the restic at
+https://github.com/chrahunt/restic/tree/pr-3200 which is the latest master
+and restic/restic#3200, supporting:
+
+1. `backup --files-from-verbatim`
+2. `backup --set-path`
+
 ## configuration
 
-Configuration lives in "$HOME/.backup/config.json" and must contain:
+Configuration lives in `$HOME/.backup/config.json` and must contain:
 
 - `base_directory` (string):
 - `env_command` (string): shell command that, when executed, must produce a
