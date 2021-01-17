@@ -163,11 +163,6 @@ def test_snapshots_include_full_input_paths():
     pass
 
 
-def test_no_snapshots_outputs_null(restic_repo):
-    result = restic_repo.run(["snapshots", "--json"], stdout=subprocess.PIPE)
-    assert result.stdout == b"null\n"
-
-
 def test_restic_backup_considers_changed_files_from_new():
     # For https://github.com/restic/restic/issues/2246
     pass
