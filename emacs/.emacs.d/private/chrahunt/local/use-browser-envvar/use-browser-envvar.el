@@ -3,9 +3,9 @@
 ;; Author: Chris Hunt <chrahunt@gmail.com>
 ;; Version: 1.0
 
-(setq
-  browse-url-generic-program (getenv "BROWSER")
-  browse-url-browser-function 'browse-url-generic
-)
+(let ((browser (getenv "BROWSER")))
+  (when browser
+    (setq browse-url-generic-program browser
+          browse-url-browser-function 'browse-url-generic)))
 
 (provide 'use-browser-envvar)
