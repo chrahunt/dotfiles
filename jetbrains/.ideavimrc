@@ -9,3 +9,14 @@ source ~/.vimrc
 " cscope-like binding to show all references of the symbol under
 " the cursor
 nmap <C-\> :action FindUsages<CR>
+
+" Open Quick-documentation for symbol under cursor. C-q is the default
+" binding in IntelliJ. I might change this since it's also used for
+" resuming terminal output.
+nmap <C-q> :action QuickJavaDoc<CR>
+
+" Use C-J and C-K to navigate down and up in autocomplete popovers.
+" C-J is already included, so we only need C-K.
+" Within the IDE, manually configure C-J as "Down" and C-K as "Up".
+" Check https://youtrack.jetbrains.com/issue/VIM-438 for updates.
+set lookupkeys+=<C-K>
