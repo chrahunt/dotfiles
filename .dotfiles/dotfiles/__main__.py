@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from dataclasses import dataclass
 from io import StringIO
 from itertools import chain
@@ -52,7 +53,8 @@ def build_packages():
 
     def nox_has_session(noxfile: Path, session_name: str) -> bool:
         result = subprocess.run(
-            ["nox", "--list", "-f", str(noxfile)], capture_output=True
+            [sys.executable, "-m", "nox", "--list", "-f", str(noxfile)],
+            capture_output=True,
         )
 
         lines = result.stdout.decode("utf-8").splitlines()
@@ -74,7 +76,10 @@ def build_packages():
         noxfile = has_applicable_noxfile(package_dir)
         if noxfile:
             print(f"Running build for {package_dir}")
-            subprocess.run(["nox", "-s", "build", "-f", str(noxfile)], check=True)
+            subprocess.run(
+                [sys.executable, "-m", "nox", "-s", "build", "-f", str(noxfile)],
+                check=True,
+            )
 
 
 def generate_stow_local_ignore():
