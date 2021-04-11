@@ -1,0 +1,3 @@
+# Workaround for /home and /var being on different disks
+# https://pbuilder-docs.readthedocs.io/en/latest/faq.html#avoiding-the-ln-invalid-cross-device-link-message
+APTCACHEHARDLINK=no
