@@ -40,3 +40,9 @@ Scripts expect to see directories under `~/.dotfiles.d/`.
 Scripts supporting the goals above are in `.dotfiles/`.
 
 Global configuration is in `dotfiles/`.
+
+## testing
+
+```
+docker build -t chrahunt/dotfiles .
+```
