@@ -1,15 +1,15 @@
 import json
 import logging
-import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, NamedTuple
 
 import click
+from pydantic import BaseModel
 from statsd import StatsClient
 
-from .filtering import get_files, get_minimal_files
+from .filtering import get_files
 from .restic import Restic
 
 
@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 statsd = StatsClient()
 
 
-class Config(NamedTuple):
+class Config(BaseModel):
     # Root directory from which files are selected.
     base_directory: str
     # Command executed in shell to get environment variables when
     # executing restic.
     env_command: str
     # Options to be provided to restic like `-o k=v`
-    options: Dict[str, str]
+    options: Dict[str, str] = {}
 
 
 def read_config() -> Config:
@@ -107,10 +107,7 @@ def list_files(list_type):
     restic = Restic(env, options=config.options)
 
     logger.info("Retrieving paths to back up")
-    files = {
-        "normal": get_files,
-        "minimal": get_minimal_files,
-    }[list_type](Path(config.base_directory))
+    files = get_files(Path(config.base_directory))
     print(json.dumps(files, separators=(",", ":")))
 
 

@@ -52,6 +52,12 @@ class Restic:
             args.extend(["--parent", latest_snapshot])
         if kwargs.pop("dry_run", False):
             args.append("--dry-run")
+            # The --dry-run flag from https://github.com/restic/restic/pull/3300
+            # doesn't show the files backed up unless verbose logging is enabled
+            # (at level 2).
+            args.append("-vv")
+            # Testing json log output.
+            args.append("--json")
         try:
             snapshot_path = kwargs.pop("snapshot_path")
         except KeyError:
