@@ -26,7 +26,7 @@ def runner():
 
 @pytest.mark.parametrize("config,message", [
     ({}, "missing"),
-    ({"directory": ""}, "unexpected"),
+    ({"directory": ""}, "extra fields not permitted"),
 ])
 def test_bad_config_fails(config, message, monkeypatch, tmp_path_factory, runner):
     home = tmp_path_factory.mktemp("home")

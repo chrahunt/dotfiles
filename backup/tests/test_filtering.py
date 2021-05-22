@@ -9,7 +9,6 @@ from backup.filtering import (
     ALWAYS_EXCLUDED_DIRS,
     EXCLUDE_IF_PRESENT_FILE,
     get_files,
-    get_minimal_files,
 )
 from .util import make_tree
 
@@ -132,40 +131,3 @@ def test_recurses_into_directories(ok, tmp_path):
     assert set(result) == set(expected)
 
 
-def test_get_minimal_files_basics(ok, tmp_path):
-    files = [
-        "a/1/" > ok,
-        "a/1/2",
-        "a/1/3",
-        # Should block a/
-        f"a/2/{EXCLUDE_IF_PRESENT_FILE}",
-        "b/1/2" > ok,
-        # Should block b/1/
-        f"b/1/3/{EXCLUDE_IF_PRESENT_FILE}",
-        "c/" > ok,
-        "c/1",
-        "d/.git" > ok,
-        # Should not be chosen since it is a sibling to a .git file.
-        "d/1",
-        "e/.git/" > ok,
-        "e/.git/1",
-        # Should not be chosen since it is a sibling to a .git directory.
-        "e/1",
-    ]
-    for i, d in enumerate(ALWAYS_EXCLUDED_DIRS):
-        files.extend([
-            f"{i}/a/1" > ok,
-            # Should block {i}/a/
-            f"{i}/a/{d}/1",
-            f"{i}/b/1" > ok,
-            f"{i}/b/2/" > ok,
-            f"{i}/b/2/1",
-            # Should block {i}/b/
-            f"{i}/b/{d}/1",
-        ])
-    make_tree(files, tmp_path)
-
-    result = get_minimal_files(tmp_path)
-    expected = get_expected(list(ok), tmp_path)
-
-    assert set(result) == set(expected)

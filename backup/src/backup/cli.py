@@ -26,6 +26,9 @@ class Config(BaseModel):
     # Options to be provided to restic like `-o k=v`
     options: Dict[str, str] = {}
 
+    class Config:
+        extra = "forbid"
+
 
 def read_config() -> Config:
     config = Path.home() / ".backup" / "config.json"
