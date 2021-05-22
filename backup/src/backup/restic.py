@@ -7,7 +7,7 @@ from itertools import chain
 from pathlib import Path
 from socket import gethostname
 from tempfile import TemporaryDirectory
-from typing import Iterator, List, Optional
+from typing import Iterator, List
 
 
 logger = logging.getLogger(__name__)
@@ -47,9 +47,6 @@ class Restic:
         # To avoid differences between the default Go hostname retrieval and Python,
         # we just always provide an explicit hostname.
         args = self._host_args()
-        latest_snapshot = self._latest_snapshot()
-        if latest_snapshot is not None:
-            args.extend(["--parent", latest_snapshot])
         if kwargs.pop("dry_run", False):
             args.append("--dry-run")
             # The --dry-run flag from https://github.com/restic/restic/pull/3300
@@ -70,31 +67,6 @@ class Restic:
 
     def _host_args(self) -> List[str]:
         return ["--host", gethostname()]
-
-    def _latest_snapshot(self) -> Optional[str]:
-        host_args = self._host_args()
-        # With our current scheme of passing all files to restic, all paths
-        # end up in each snapshot. Using --json may make the most sense from an
-        # interoperability point-of-view, but we don't actually want to read and
-        # parse hundreds of MB of JSON text to figure out the latest snapshot.
-
-        # --compact strips the paths from the output
-        # "latest" will retrieve only the latest item, so we should be left with
-        # one data row
-        result = self.run(
-            ["snapshots", "--compact", *host_args, "latest"], stdout=subprocess.PIPE
-        )
-        text = result.stdout.decode("utf-8")
-
-        try:
-            footer_divider = text.rindex("\n-----")
-        except ValueError:
-            # If there are no snapshots, the table is not printed.
-            return None
-
-        last_row_start = text.rindex("\n", 0, footer_divider) + 1
-        snapshot_id_end = text.index(" ", last_row_start)
-        return text[last_row_start:snapshot_id_end]
 
     def need_init(self) -> bool:
         # https://github.com/restic/restic/issues/1690

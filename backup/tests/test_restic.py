@@ -1,9 +1,7 @@
-import json
 import os
 import re
 import subprocess
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -88,11 +86,11 @@ def test_exclude_escaping():
 def test_backup_also_includes_directories(
     ok, tmp_path_factory, restic_repo, restic_repo_path
 ):
-    """Restic treats incoming directory paths as a call to recursively store
-    everything in that directory.
-
-    This test checks that behavior.
-    """
+    # Restic treats incoming directory paths as a call to recursively store
+    # everything in that directory. When we're passing an explicit list of
+    # files to Restic that can be unexpected, so we don't include intermediate
+    # directories. This test checks that restic continues to behave the same, to
+    # justify that decision in our filtering logic.
     tmp_path = tmp_path_factory.mktemp("src")
     files = [
         "a/b/c" > ok,
@@ -126,7 +124,9 @@ def test_backup_also_includes_directories(
     assert get_expected(list(ok)) == stored_paths
 
 
-def test_backup_uses_latest_parent(ok, restic_repo, tmp_path_factory):
+def test_backup_without_set_path_cant_find_parent(ok, restic_repo, tmp_path_factory):
+    # By default, restic uses the provided paths as the "paths" field for snapshots.
+    # This checks that behavior.
     tmp_path = tmp_path_factory.mktemp("src")
     files = [
         "a" > ok,
@@ -147,6 +147,66 @@ def test_backup_uses_latest_parent(ok, restic_repo, tmp_path_factory):
     m = re.search(r"Files:\s+(\d+) new,\s+(\d+) changed,\s+(\d+) unmodified", output)
     assert m, f"Could not find 'Files' in {output}"
     new, changed, unmodified = map(int, m.groups())
+    # Since the files changed, we expect parent detection to have failed and all
+    # files/directories to be considered new.
+    assert new > 0, output
+    assert changed == 0, output
+    assert unmodified == 0, output
+
+    m = re.search(r"Dirs:\s+(\d+) new,\s+(\d+) changed,\s+(\d+) unmodified", output)
+    assert m, f"Could not find 'Dirs' in {output}"
+    new, changed, unmodified = map(int, m.groups())
+    # Since the files changed, we expect parent detection to have failed and all
+    # files/directories to be considered new.
+    assert new > 0, output
+    assert changed == 0, output
+    assert unmodified == 0, output
+
+
+# The snapshot_path field is just an arbitrary value that has to match across
+# invocations, but usually this will be the base directory from which pre-filtered
+# paths are determined.
+# We use an absolute and relative path here and then change directory to different
+# locations in the test to ensure that the value is used verbatim for finding the
+# parent snapshot and not made absolute.
+@pytest.mark.parametrize("snapshot_path", ["/foo"])
+# The relative path case fails, due to
+# https://github.com/restic/restic/blame/74c0607c9222edec3b0c140bb6fee962d6d2e82d/internal/restic/snapshot_find.go#L20
+# but we don't use that anyway.
+#@pytest.mark.parametrize("snapshot_path", ["/foo", "foo"])
+def test_backup_uses_latest_parent(snapshot_path, ok, restic_repo, tmp_path_factory):
+    # By default, restic uses the provided paths as the "paths" field for snapshots.
+    # With --set-path, now it is possible to override this behavior. This test
+    # Ensures that --set-path works as-expected for finding the correct parent
+    # even if the set of paths backed up changes.
+    run_dir_1 = tmp_path_factory.mktemp("run_dir_1")
+    run_dir_2 = tmp_path_factory.mktemp("run_dir_2")
+    tmp_path = tmp_path_factory.mktemp("src")
+    files = [
+        "a" > ok,
+        "b" > ok,
+        "c",
+    ]
+    make_tree(files, tmp_path)
+    # First set of input files only include a subset of files.
+    restic_input = list(ok)
+    restic_input = [str(tmp_path / p) for p in restic_input]
+
+    restic_repo.backup(restic_input, snapshot_path=snapshot_path, cwd=run_dir_1)
+
+    all_restic_input = [str(tmp_path / p) for p in files]
+    result = restic_repo.backup(
+        all_restic_input,
+        snapshot_path=snapshot_path,
+        cwd=run_dir_2,
+        stdout=subprocess.PIPE,
+    )
+
+    output = result.stdout.decode("utf-8")
+    m = re.search(r"Files:\s+(\d+) new,\s+(\d+) changed,\s+(\d+) unmodified", output)
+    assert m, f"Could not find 'Files' in {output}"
+    new, changed, unmodified = map(int, m.groups())
+    # If parent detection failed, then all files would be considered new.
     assert new == 1, output
     assert changed == 0, output
     assert unmodified == 2, output
@@ -154,6 +214,7 @@ def test_backup_uses_latest_parent(ok, restic_repo, tmp_path_factory):
     m = re.search(r"Dirs:\s+(\d+) new,\s+(\d+) changed,\s+(\d+) unmodified", output)
     assert m, f"Could not find 'Dirs' in {output}"
     new, changed, unmodified = map(int, m.groups())
+    # If parent detection failed, then all files would be considered new.
     assert new == 0, output
     assert changed >= 0, output
     assert unmodified >= 0, output
