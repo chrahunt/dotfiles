@@ -3,7 +3,7 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, NamedTuple
+from typing import Dict, List
 
 import click
 from pydantic import BaseModel
@@ -43,6 +43,14 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
 
 
+ALWAYS_EXCLUDED_DIRS = [
+    "node_modules",
+    "__pycache__",
+    ".venv",
+    ".nox",
+]
+
+
 @main.command("backup")
 @click.option("--dry-run/--no-dry-run")
 def backup(dry_run):
@@ -58,7 +66,7 @@ def backup(dry_run):
         restic.run(["init"])
 
     logger.info("Retrieving paths to back up")
-    files = get_files(Path(config.base_directory))
+    files = get_files(Path(config.base_directory), ALWAYS_EXCLUDED_DIRS)
 
     logger.info("Starting backup")
     with statsd.timer("backup_time"):
@@ -99,18 +107,11 @@ def maintain():
     )
 
 
-@main.command("list-files")
-@click.option("--list-type", type=str, default="normal")
-def list_files(list_type):
-    config = read_config()
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env, options=config.options)
-
-    logger.info("Retrieving paths to back up")
-    files = get_files(Path(config.base_directory))
+@main.command("ls")
+@click.option("--base-directory", type=str, required=True)
+@click.option("--exclude-dir", multiple=True, default=[])
+def ls(base_directory, exclude_dir: List[str]):
+    files = get_files(Path(base_directory), exclude_dir)
     print(json.dumps(files, separators=(",", ":")))
 
 

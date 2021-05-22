@@ -3,10 +3,7 @@ import os
 from pathlib import Path
 from typing import Dict
 
-import pytest
-
 from backup.filtering import (
-    ALWAYS_EXCLUDED_DIRS,
     EXCLUDE_IF_PRESENT_FILE,
     get_files,
 )
@@ -39,7 +36,7 @@ def test_excludes_empty_directories(ok, tmp_path):
     ]
     make_tree(files, tmp_path)
 
-    result = get_files(tmp_path)
+    result = get_files(tmp_path, [])
     expected = get_expected(list(ok), tmp_path)
 
     assert set(result) == set(expected)
@@ -54,7 +51,7 @@ def test_includes_gitdir_contents(ok, tmp_path):
     ]
     make_tree(files, tmp_path)
 
-    result = get_files(tmp_path)
+    result = get_files(tmp_path, [])
     expected = get_expected(list(ok), tmp_path)
 
     assert set(result) == set(expected)
@@ -69,7 +66,7 @@ def test_excludes_git_worktree_contents(ok, tmp_path):
     ]
     make_tree(files, tmp_path)
 
-    result = get_files(tmp_path)
+    result = get_files(tmp_path, [])
     expected = get_expected(list(ok), tmp_path)
 
     assert set(result) == set(expected)
@@ -82,14 +79,14 @@ def test_excludes_nobackup_directories(ok, tmp_path):
     ]
     make_tree(files, tmp_path)
 
-    result = get_files(tmp_path)
+    result = get_files(tmp_path, [])
     expected = get_expected(list(ok), tmp_path)
 
     assert set(result) == set(expected)
 
 
-@pytest.mark.parametrize("dirname", ALWAYS_EXCLUDED_DIRS)
-def test_excludes_excluded_dirs(dirname, ok, tmp_path):
+def test_excludes_general_excluded_dirs(ok, tmp_path):
+    dirname = "example"
     files = [
         "a/1" > ok,
         "b/1" > ok,
@@ -98,7 +95,22 @@ def test_excludes_excluded_dirs(dirname, ok, tmp_path):
     ]
     make_tree(files, tmp_path)
 
-    result = get_files(tmp_path)
+    result = get_files(tmp_path, [dirname])
+    expected = get_expected(list(ok), tmp_path)
+
+    assert set(result) == set(expected)
+
+
+def test_excludes_absolute_excluded_dirs(ok, tmp_path):
+    files = [
+        "a/1" > ok,
+        "b/1",
+        "c/b/1" > ok,
+        "d/a/1",
+    ]
+    make_tree(files, tmp_path)
+
+    result = get_files(tmp_path, ["/b", "/d/a"])
     expected = get_expected(list(ok), tmp_path)
 
     assert set(result) == set(expected)
@@ -112,7 +124,7 @@ def test_includes_git_file(ok, tmp_path):
     ]
     make_tree(files, tmp_path)
 
-    result = get_files(tmp_path)
+    result = get_files(tmp_path, [])
     expected = get_expected(list(ok), tmp_path)
 
     assert set(result) == set(expected)
@@ -125,9 +137,7 @@ def test_recurses_into_directories(ok, tmp_path):
     ]
     make_tree(files, tmp_path)
 
-    result = get_files(tmp_path)
+    result = get_files(tmp_path, [])
     expected = get_expected(list(ok), tmp_path)
 
     assert set(result) == set(expected)
-
-
