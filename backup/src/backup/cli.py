@@ -21,9 +21,9 @@ statsd = StatsClient()
 class Config(BaseModel):
     # Root directory from which files are selected.
     base_directory: str
-    # Command executed in shell to get environment variables when
-    # executing restic.
-    env_command: str
+    # Output of `env_command`, which is executed to get environment
+    # variables used for running restic.
+    env: Dict[str, str]
     # Directories to be excluded. Absolute paths are considered relative
     # to the base_directory, relative paths match any subdirectory (recursively).
     exclude_dirs: List[str] = []
@@ -46,7 +46,16 @@ def read_config(path: str) -> Config:
             f"Unsupported file type {config.suffix}"
         )
 
-    return Config(**data)
+    try:
+        env_command = data.pop("env_command")
+    except KeyError:
+        env = {}
+    else:
+        result = subprocess.run(
+            env_command, check=True, shell=True, stdout=subprocess.PIPE
+        )
+        env = json.loads(result.stdout.decode("utf-8"))
+    return Config(**data, env=env)
 
 
 config: Optional[Config] = None
@@ -65,11 +74,7 @@ def main(config_file: str):
 @main.command("backup")
 @click.option("--dry-run/--no-dry-run")
 def backup(dry_run):
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env, options=config.options)
+    restic = Restic(config.env, options=config.options)
 
     if restic.need_init():
         logger.info("Running `restic init`")
@@ -89,11 +94,7 @@ def backup(dry_run):
 def maintain():
     """Remove snapshots according to hard-coded schedule.
     """
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env, options=config.options)
+    restic = Restic(config.env, options=config.options)
 
     if restic.need_init():
         logger.info("Repository has not been initialized")
@@ -135,11 +136,7 @@ def ls_from_config():
 def restic(args):
     """Run restic, populating configuration.
     """
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env)
+    restic = Restic(config.env)
 
     try:
         restic.run(args)
