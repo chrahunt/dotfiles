@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import click
+import yaml
 from pydantic import BaseModel
 from statsd import StatsClient
 
@@ -32,7 +33,16 @@ class Config(BaseModel):
 
 def read_config(path: str) -> Config:
     config = Path(path)
-    data = json.loads(config.read_text(encoding="utf-8"))
+    config_text = config.read_text(encoding="utf-8")
+    if config.suffix == ".json":
+        data = json.loads(config_text)
+    elif config.suffix in {".yml", ".yaml"}:
+        data = yaml.safe_load(config_text)
+    else:
+        raise RuntimeError(
+            f"Unsupported file type {config.suffix}"
+        )
+
     return Config(**data)
 
 

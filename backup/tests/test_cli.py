@@ -3,9 +3,12 @@ import shlex
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
 from string import Template
+from typing import Callable, Dict
 
 import pytest
+import yaml
 from click.testing import CliRunner
 
 from backup.cli import main
@@ -41,6 +44,59 @@ def test_bad_config_fails(config, message, monkeypatch, tmp_path_factory, runner
     assert message in str(result.exception)
 
 
+def test_unknown_config_format_fails(tmp_path_factory, runner):
+    home = tmp_path_factory.mktemp("home")
+    config_name = "config.txt"
+    config_path = make_config(home, config_name, {}, "/")
+    result = runner(["-f", str(config_path), "backup"])
+    assert result.exit_code != 0
+    assert "Unsupported file type" in str(result.exception)
+
+
+@pytest.mark.parametrize("config_name", ["config.yml", "config.yaml"])
+def test_yaml_config_file_works(tmp_path_factory, runner, config_name):
+    home = tmp_path_factory.mktemp("home")
+    config_path = make_config(home, config_name, {}, "/", converter=yaml.safe_dump)
+    result = runner(["-f", str(config_path), "restic"])
+    assert result.exit_code == 0
+
+
+def make_config(
+    temp_dir: Path,
+    config_name: str,
+    env: Dict[str, str],
+    base_directory: str,
+    converter: Callable[[str], str] = json.dumps,
+):
+    helper_script = temp_dir / "helper.py"
+    helper_script.write_text(
+        textwrap.dedent(
+            Template(
+                """
+                import json
+
+
+                data = $data
+                print(json.dumps(data))
+                """
+            ).substitute(data=json.dumps(env))
+        ),
+        encoding="utf-8",
+    )
+    command = [sys.executable, str(helper_script)]
+    command_args = map(shlex.quote, command)
+    command_text = " ".join(command_args)
+
+    config = {
+        "base_directory": base_directory,
+        "env_command": command_text,
+        "options": {},
+    }
+    config_path = temp_dir / config_name
+    config_path.write_text(converter(config))
+    return config_path
+
+
 @pytest.fixture
 def write_config(monkeypatch, tmp_path_factory):
     """For reasons, some of our configuration is retrieved dynamically by invoking
@@ -52,33 +108,8 @@ def write_config(monkeypatch, tmp_path_factory):
     config_path = home / ".backup" / "config.json"
     config_path.parent.mkdir()
 
-    def _write_config(base_directory, env):
-        helper_script = home / "helper.py"
-        helper_script.write_text(
-            textwrap.dedent(
-                Template(
-                    """
-                    import json
-
-
-                    data = $data
-                    print(json.dumps(data))
-                    """
-                ).substitute(data=json.dumps(env))
-            ),
-            encoding="utf-8",
-        )
-        command = [sys.executable, str(helper_script)]
-        command_args = map(shlex.quote, command)
-        command_text = " ".join(command_args)
-
-        config = {
-            "base_directory": base_directory,
-            "env_command": command_text,
-            "options": {},
-        }
-        config_path.write_text(json.dumps(config))
-        return config_path
+    def _write_config(base_directory: str, env: Dict[str, str]):
+        return make_config(home, "config.json", env, base_directory)
 
     return _write_config
 
