@@ -36,7 +36,7 @@ def test_bad_config_fails(config, message, monkeypatch, tmp_path_factory, runner
     config_path = home / ".backup" / "config.json"
     config_path.parent.mkdir()
     config_path.write_text(json.dumps(config), encoding="utf-8")
-    result = runner(["backup"])
+    result = runner(["-f", str(config_path), "backup"])
     assert result.exit_code != 0
     assert message in str(result.exception)
 
@@ -78,6 +78,7 @@ def write_config(monkeypatch, tmp_path_factory):
             "options": {},
         }
         config_path.write_text(json.dumps(config))
+        return config_path
 
     return _write_config
 
@@ -91,8 +92,8 @@ def test_initializes_restic_repo(write_config, tmp_path_factory, runner):
         "RESTIC_PASSWORD": "qwerty1234",
         "RESTIC_REPOSITORY": str(repo),
     }
-    write_config(str(src), env)
-    result = runner(["backup"])
+    config = write_config(str(src), env)
+    result = runner(["-f", str(config), "backup"])
     assert result.exit_code == 0
 
     # Now validate with restic outside the wrapper script.
@@ -128,8 +129,8 @@ def test_respects_some_filter_rules(ok, write_config, tmp_path_factory, runner):
         "RESTIC_PASSWORD": "qwerty1234",
         "RESTIC_REPOSITORY": str(repo),
     }
-    write_config(str(src), env)
-    result = runner(["backup"])
+    config = write_config(str(src), env)
+    result = runner(["-f", str(config), "backup"])
     assert result.exit_code == 0
 
     # Now validate with restic outside the wrapper script.

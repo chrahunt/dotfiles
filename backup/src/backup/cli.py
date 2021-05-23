@@ -3,7 +3,7 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import click
 from pydantic import BaseModel
@@ -30,17 +30,23 @@ class Config(BaseModel):
         extra = "forbid"
 
 
-def read_config() -> Config:
-    config = Path.home() / ".backup" / "config.json"
-    if not config.exists():
-        raise RuntimeError(f"Configuration must exist at {config}!")
+def read_config(path: str) -> Config:
+    config = Path(path)
     data = json.loads(config.read_text(encoding="utf-8"))
     return Config(**data)
 
 
+config: Optional[Config] = None
+
+
 @click.group()
-def main():
+@click.option(
+    "--config-file", "-f", type=click.Path(exists=True)
+)
+def main(config_file: str):
+    global config
     logging.basicConfig(level=logging.DEBUG)
+    config = read_config(config_file)
 
 
 ALWAYS_EXCLUDED_DIRS = [
@@ -54,7 +60,6 @@ ALWAYS_EXCLUDED_DIRS = [
 @main.command("backup")
 @click.option("--dry-run/--no-dry-run")
 def backup(dry_run):
-    config = read_config()
     result = subprocess.run(
         config.env_command, check=True, shell=True, stdout=subprocess.PIPE
     )
@@ -79,7 +84,6 @@ def backup(dry_run):
 def maintain():
     """Remove snapshots according to hard-coded schedule.
     """
-    config = read_config()
     result = subprocess.run(
         config.env_command, check=True, shell=True, stdout=subprocess.PIPE
     )
@@ -120,7 +124,6 @@ def ls(base_directory, exclude_dir: List[str]):
 def restic(args):
     """Run restic, populating configuration.
     """
-    config = read_config()
     result = subprocess.run(
         config.env_command, check=True, shell=True, stdout=subprocess.PIPE
     )
