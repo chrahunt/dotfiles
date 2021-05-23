@@ -5,7 +5,7 @@ import sys
 import textwrap
 from pathlib import Path
 from string import Template
-from typing import Callable, Dict
+from typing import Any, Callable, Dict
 
 import pytest
 import yaml
@@ -66,7 +66,7 @@ def make_config(
     config_name: str,
     env: Dict[str, str],
     base_directory: str,
-    converter: Callable[[str], str] = json.dumps,
+    converter: Callable[[Any], str] = json.dumps,
 ):
     helper_script = temp_dir / "helper.py"
     helper_script.write_text(
@@ -87,10 +87,16 @@ def make_config(
     command_args = map(shlex.quote, command)
     command_text = " ".join(command_args)
 
+    # Test that we're actually executing env_command to
+    # get values, by referring to them in config.
+    config_env = {
+        k: f"{{{k}}}" for k in env.keys()
+    }
     config = {
         "base_directory": base_directory,
         "env_command": command_text,
         "options": {},
+        "env": config_env,
     }
     config_path = temp_dir / config_name
     config_path.write_text(converter(config))

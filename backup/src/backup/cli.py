@@ -3,6 +3,7 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
+from socket import gethostname
 from typing import Dict, List, Optional
 
 import click
@@ -46,15 +47,33 @@ def read_config(path: str) -> Config:
             f"Unsupported file type {config.suffix}"
         )
 
+    base_vars = {"hostname": gethostname()}
     try:
         env_command = data.pop("env_command")
     except KeyError:
-        env = {}
+        command_result_vars = {}
     else:
         result = subprocess.run(
             env_command, check=True, shell=True, stdout=subprocess.PIPE
         )
-        env = json.loads(result.stdout.decode("utf-8"))
+        command_result_vars = json.loads(result.stdout.decode("utf-8"))
+
+    config_vars = {**base_vars, **command_result_vars}
+
+    try:
+        original_env = data.pop("env")
+    except KeyError:
+        original_env = {}
+
+    env = {}
+    for k, v in original_env.items():
+        try:
+            env[k] = v.format(**config_vars)
+        except KeyError as e:
+            raise RuntimeError(
+                f"env.{k} expects {e.args[0]}, but it is not available"
+            )
+
     return Config(**data, env=env)
 
 
@@ -129,6 +148,11 @@ def ls(base_directory, exclude_dir: List[str]):
 def ls_from_config():
     files = get_files(Path(config.base_directory), config.exclude_dirs)
     print(json.dumps(files, separators=(",", ":")))
+
+
+@main.command("dump-config")
+def dump_config():
+    print(config.json())
 
 
 @main.command("restic")
