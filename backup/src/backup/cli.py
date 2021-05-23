@@ -24,6 +24,9 @@ class Config(BaseModel):
     # Command executed in shell to get environment variables when
     # executing restic.
     env_command: str
+    # Directories to be excluded. Absolute paths are considered relative
+    # to the base_directory, relative paths match any subdirectory (recursively).
+    exclude_dirs: List[str] = []
     # Options to be provided to restic like `-o k=v`
     options: Dict[str, str] = {}
 
@@ -59,14 +62,6 @@ def main(config_file: str):
     config = read_config(config_file)
 
 
-ALWAYS_EXCLUDED_DIRS = [
-    "node_modules",
-    "__pycache__",
-    ".venv",
-    ".nox",
-]
-
-
 @main.command("backup")
 @click.option("--dry-run/--no-dry-run")
 def backup(dry_run):
@@ -81,7 +76,7 @@ def backup(dry_run):
         restic.run(["init"])
 
     logger.info("Retrieving paths to back up")
-    files = get_files(Path(config.base_directory), ALWAYS_EXCLUDED_DIRS)
+    files = get_files(Path(config.base_directory), config.exclude_dirs)
 
     logger.info("Starting backup")
     with statsd.timer("backup_time"):
@@ -126,6 +121,12 @@ def maintain():
 @click.option("--exclude-dir", multiple=True, default=[])
 def ls(base_directory, exclude_dir: List[str]):
     files = get_files(Path(base_directory), exclude_dir)
+    print(json.dumps(files, separators=(",", ":")))
+
+
+@main.command("ls-from-config")
+def ls_from_config():
+    files = get_files(Path(config.base_directory), config.exclude_dirs)
     print(json.dumps(files, separators=(",", ":")))
 
 
