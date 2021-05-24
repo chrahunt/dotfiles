@@ -1,5 +1,6 @@
 """Helper script to iterate over and run git-bark in each repository.
 """
+import argparse
 import json
 import logging
 import subprocess
@@ -8,8 +9,12 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-def get_repo_worktrees():
-    result = subprocess.run(["backup", "list-files"], stdout=subprocess.PIPE, check=True)
+def get_repo_worktrees(config_path: str):
+    result = subprocess.run(
+        ["backup", "-f", str(config_path), "ls-from-config"],
+        stdout=subprocess.PIPE,
+        check=True,
+    )
     text = result.stdout.decode("utf-8")
     files = json.loads(text)
     repos = set()
@@ -26,8 +31,11 @@ def get_repo_worktrees():
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", required=True)
+    args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG)
-    repo_worktrees = get_repo_worktrees()
+    repo_worktrees = get_repo_worktrees(args.f)
     for d in repo_worktrees:
         logger.info("Backing up %r", d)
         subprocess.run(["git", "bark", "backup"], cwd=d)
