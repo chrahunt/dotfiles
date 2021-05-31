@@ -102,6 +102,10 @@ def backup(dry_run):
     logger.info("Retrieving paths to back up")
     files = get_files(Path(config.base_directory), config.exclude_dirs)
 
+    if not files:
+        logger.warning("No paths to backup, skipping")
+        return
+
     logger.info("Starting backup")
     with statsd.timer("backup_time"):
         restic.backup(files, snapshot_path=config.base_directory, dry_run=dry_run)
