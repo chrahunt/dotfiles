@@ -1,4 +1,6 @@
-# emacs/spacemacs
+# emacs
+
+## spacemacs
 
 Setup with
 
@@ -15,6 +17,13 @@ cd ~/.emacs.d && git pull origin develop
 
 then in emacs, execute `SPC f e D` to diff the template with the
 customized file and pull in any new parts.
+
+## doom
+
+When the repository is initially cloned and deployed, start a new shell
+and run `doom install`.
+
+To use doom-based configuration, run emacs with `--with-profile doom`.
 
 ## org note setup
 
