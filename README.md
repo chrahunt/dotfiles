@@ -7,6 +7,9 @@ home directory.
 
 ## usage
 
+Clone with `--recurse-submodules` or run `git submodule update --init` in
+an existing repository.
+
 Setup
 
     mkdir -p ~/.dotfiles.d
