@@ -4,6 +4,8 @@
 ;; Version: 1.0
 ;; Package-Requires: ()
 
+(require 'ob-core)
+
 (defun org-babel-execute:org-capture-template (body params)
   "Evaluation function for src block evaluation"
   (interactive)
