@@ -23,7 +23,11 @@ customized file and pull in any new parts.
 When the repository is initially cloned and deployed, start a new shell
 and run `doom install`.
 
-To use doom-based configuration, run emacs with `--with-profile doom`.
+### initialization
+
+### save packages
+
+### revert packages
 
 ## org note setup
 

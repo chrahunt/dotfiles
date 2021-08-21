@@ -187,4 +187,7 @@
 
        :config
        ;;literate
-       (default +bindings +smartparens))
+       (default +bindings +smartparens)
+
+       :chrahunt
+       packages)

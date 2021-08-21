@@ -21,22 +21,31 @@
 ;; Local packages
 ;; For each of these, right now I'm directing to my spacemacs layer
 ;; package directory, until I'm ready to switch completely.
+;; Using `(use-package <name> :load-path "...")' ensures that these do not
+;; show up in straight.el's lockfile, which is important since:
+;; 1. it embeds the full path (and I use different home directories on different machines)
+;; 2. it records the commit prior to the one for the lockfile, and I'm not sure what behavior
+;;    that would have
+
 ;; Fixes for org-id-based org links
-(package! ol-org-id
-  ;; Redirect to spacemacs layer location for now.
-  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/ol-org-id"))
+(use-package ol-org-id
+  :defer
+  :load-path "../.emacs.d-private/chrahunt/local/ol-org-id")
 
 ;; Nicer screenshot capture/image pasting experience
-(package! org-download-z
-  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/org-download-z"))
+(use-package org-download-z
+  :defer
+  :load-path "../.emacs.d-private/chrahunt/local/org-download-z")
 
 ;; Clone indirect buffer in other frame
-(package! cibof
-  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/cibof"))
+(use-package cibof
+  :defer
+  :load-path "../.emacs.d-private/chrahunt/local/cibof")
 
 ;; In-buffer capture template definitions
-(package! org-in-buffer-capture-templates
-  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/org-in-buffer-capture-templates"))
+(use-package org-in-buffer-capture-templates
+  :defer
+  :load-path "../.emacs.d-private/chrahunt/local/org-in-buffer-capture-templates")
 
 ;; To install a package directly from a remote git repo, you must specify a
 ;; `:recipe'. You'll find documentation on what `:recipe' accepts here:
