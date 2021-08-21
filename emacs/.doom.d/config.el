@@ -166,6 +166,12 @@
   ;; buffer (`org-store-link'/`org-open-at-point')
   (add-to-list 'org-modules 'ol-info)
 
+  ;; By default, doom configures `visual-line-mode' with `text-mode-hook'.
+  ;; I don't like it generally, so disable it by default - it can be re-enabled
+  ;; if needed with (SPC t w).
+  (add-hook! org-mode
+             (visual-line-mode -1))
+
   ;; Workaround for error seen after executing babel src block:
   ;;     Error (org-babel-after-execute-hook): Error running hook "org-redisplay-inline-images" because: (error Invalid base64 data)
   ;; from https://github.com/hlissner/doom-emacs/issues/3185
