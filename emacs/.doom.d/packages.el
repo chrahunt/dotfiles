@@ -5,9 +5,38 @@
 ;; on the command line, then restart Emacs for the changes to take effect -- or
 ;; use 'M-x doom/reload'.
 
+;; Provides yaml highlighting in src blocks in org
+(package! yaml-mode)
+;; Auto-commit files on save
+(package! git-auto-commit-mode)
+;; Extended task dependencies
+(package! org-edna)
+;; org-babel rust support
+(package! rustic)
+;; org-babel jq support
+(package! jq-mode)
+;; Spaced repetition in org mode
+(package! org-drill)
 
-;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
-;(package! some-package)
+;; Local packages
+;; For each of these, right now I'm directing to my spacemacs layer
+;; package directory, until I'm ready to switch completely.
+;; Fixes for org-id-based org links
+(package! ol-org-id
+  ;; Redirect to spacemacs layer location for now.
+  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/ol-org-id"))
+
+;; Nicer screenshot capture/image pasting experience
+(package! org-download-z
+  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/org-download-z"))
+
+;; Clone indirect buffer in other frame
+(package! cibof
+  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/cibof"))
+
+;; In-buffer capture template definitions
+(package! org-in-buffer-capture-templates
+  :recipe (:local-repo "../.emacs.d-private/chrahunt/local/org-in-buffer-capture-templates"))
 
 ;; To install a package directly from a remote git repo, you must specify a
 ;; `:recipe'. You'll find documentation on what `:recipe' accepts here:

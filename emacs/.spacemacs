@@ -756,6 +756,8 @@ are equal return t."
           (org-agenda-span 2)
           ;; Start week on today
           (org-agenda-start-on-weekday nil)
+          ;; No really, show the current day
+          (org-agenda-start-day nil)
           ;; Override the default prefix used for the item display on the agenda page.
           ;; Normally this will show the category, "notes:    ", as derived from the
           ;; filename, which is not useful here since all my tasks are in 1 file.
