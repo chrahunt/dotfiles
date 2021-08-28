@@ -25,9 +25,56 @@ and run `doom install`.
 
 ### initialization
 
-### save packages
+NOTE: doom does not respect the `-y` command-line argument (at this time)
+
+```
+# By default, straight.el will delegate to our lockfile
+YES=1 doom install --no-env --no-config
+# Revert auto-upgraded melpa, emacsmirror-mirror,
+doom thaw-packages
+doom sync
+```
+
+To check that the packages are the same versions, run
+
+```
+doom freeze-packages
+```
+
+and confirm that `~/.emacs.d-doom-.local/straight/versions/default.el` was
+not changed.
+
+### adding packages
+
+Add new package declarations to `.doom.d/package.el` and run `doom sync`.
+
+Once happy with the results, run
+
+```
+doom freeze-packages
+```
+
+to update `default.el`, then commit it along with `.doom.d/package.el`.
 
 ### revert packages
+
+The repository tracks the doom version and emacs package versions together.
+
+Check out the doom submodule, `package.el`, configuration and `default.el` that correspond to the
+desired, then
+
+```
+doom thaw-packages
+doom sync
+```
+
+### upgrading packages
+
+```
+doom sync -u
+```
+
+Then follow "adding packages".
 
 ## org note setup
 
