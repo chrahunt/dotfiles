@@ -3,7 +3,7 @@ import nox
 
 @nox.session(python=["3.8"], reuse_venv=True)
 def all(session):
-    session.install("click")
+    session.install("click", "nox")
     session.run("python", ".dotfiles/dotfiles", *session.posargs)
 
 

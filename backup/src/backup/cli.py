@@ -1,15 +1,17 @@
 import json
 import logging
-import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, NamedTuple
+from socket import gethostname
+from typing import Dict, List, Optional
 
 import click
+import yaml
+from pydantic import BaseModel
 from statsd import StatsClient
 
-from .filtering import get_files, get_exclude_files, get_minimal_files
+from .filtering import get_files
 from .restic import Restic
 
 
@@ -17,45 +19,92 @@ logger = logging.getLogger(__name__)
 statsd = StatsClient()
 
 
-class Config(NamedTuple):
+class Config(BaseModel):
     # Root directory from which files are selected.
     base_directory: str
-    # Command executed in shell to get environment variables when
-    # executing restic.
-    env_command: str
+    # Output of `env_command`, which is executed to get environment
+    # variables used for running restic.
+    env: Dict[str, str]
+    # Directories to be excluded. Absolute paths are considered relative
+    # to the base_directory, relative paths match any subdirectory (recursively).
+    exclude_dirs: List[str] = []
     # Options to be provided to restic like `-o k=v`
-    options: Dict[str, str]
+    options: Dict[str, str] = {}
+
+    class Config:
+        extra = "forbid"
 
 
-def read_config() -> Config:
-    config = Path.home() / ".backup" / "config.json"
-    if not config.exists():
-        raise RuntimeError(f"Configuration must exist at {config}!")
-    data = json.loads(config.read_text(encoding="utf-8"))
-    return Config(**data)
+def read_config(path: str) -> Config:
+    config = Path(path)
+    config_text = config.read_text(encoding="utf-8")
+    if config.suffix == ".json":
+        data = json.loads(config_text)
+    elif config.suffix in {".yml", ".yaml"}:
+        data = yaml.safe_load(config_text)
+    else:
+        raise RuntimeError(
+            f"Unsupported file type {config.suffix}"
+        )
+
+    base_vars = {"hostname": gethostname()}
+    try:
+        env_command = data.pop("env_command")
+    except KeyError:
+        command_result_vars = {}
+    else:
+        result = subprocess.run(
+            env_command, check=True, shell=True, stdout=subprocess.PIPE
+        )
+        command_result_vars = json.loads(result.stdout.decode("utf-8"))
+
+    config_vars = {**base_vars, **command_result_vars}
+
+    try:
+        original_env = data.pop("env")
+    except KeyError:
+        original_env = {}
+
+    env = {}
+    for k, v in original_env.items():
+        try:
+            env[k] = v.format(**config_vars)
+        except KeyError as e:
+            raise RuntimeError(
+                f"env.{k} expects {e.args[0]}, but it is not available"
+            )
+
+    return Config(**data, env=env)
+
+
+config: Optional[Config] = None
 
 
 @click.group()
-def main():
+@click.option(
+    "--config-file", "-f", type=click.Path(exists=True)
+)
+def main(config_file: str):
+    global config
     logging.basicConfig(level=logging.DEBUG)
+    config = read_config(config_file)
 
 
 @main.command("backup")
 @click.option("--dry-run/--no-dry-run")
 def backup(dry_run):
-    config = read_config()
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env, options=config.options)
+    restic = Restic(config.env, options=config.options)
 
     if restic.need_init():
         logger.info("Running `restic init`")
         restic.run(["init"])
 
     logger.info("Retrieving paths to back up")
-    files = get_files(Path(config.base_directory))
+    files = get_files(Path(config.base_directory), config.exclude_dirs)
+
+    if not files:
+        logger.warning("No paths to backup, skipping")
+        return
 
     logger.info("Starting backup")
     with statsd.timer("backup_time"):
@@ -68,12 +117,7 @@ def backup(dry_run):
 def maintain():
     """Remove snapshots according to hard-coded schedule.
     """
-    config = read_config()
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env, options=config.options)
+    restic = Restic(config.env, options=config.options)
 
     if restic.need_init():
         logger.info("Repository has not been initialized")
@@ -96,23 +140,23 @@ def maintain():
     )
 
 
-@main.command("list-files")
-@click.option("--list-type", type=str, default="normal")
-def list_files(list_type):
-    config = read_config()
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env, options=config.options)
-
-    logger.info("Retrieving paths to back up")
-    files = {
-        "normal": get_files,
-        "minimal": get_minimal_files,
-        "excluded": get_exclude_files,
-    }[list_type](Path(config.base_directory))
+@main.command("ls")
+@click.option("--base-directory", type=str, required=True)
+@click.option("--exclude-dir", multiple=True, default=[])
+def ls(base_directory, exclude_dir: List[str]):
+    files = get_files(Path(base_directory), exclude_dir)
     print(json.dumps(files, separators=(",", ":")))
+
+
+@main.command("ls-from-config")
+def ls_from_config():
+    files = get_files(Path(config.base_directory), config.exclude_dirs)
+    print(json.dumps(files, separators=(",", ":")))
+
+
+@main.command("dump-config")
+def dump_config():
+    print(config.json())
 
 
 @main.command("restic")
@@ -120,12 +164,7 @@ def list_files(list_type):
 def restic(args):
     """Run restic, populating configuration.
     """
-    config = read_config()
-    result = subprocess.run(
-        config.env_command, check=True, shell=True, stdout=subprocess.PIPE
-    )
-    env = json.loads(result.stdout.decode("utf-8"))
-    restic = Restic(env)
+    restic = Restic(config.env)
 
     try:
         restic.run(args)

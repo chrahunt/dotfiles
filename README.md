@@ -7,6 +7,9 @@ home directory.
 
 ## usage
 
+Clone with `--recurse-submodules` or run `git submodule update --init` in
+an existing repository.
+
 Setup
 
     mkdir -p ~/.dotfiles.d
@@ -40,3 +43,9 @@ Scripts expect to see directories under `~/.dotfiles.d/`.
 Scripts supporting the goals above are in `.dotfiles/`.
 
 Global configuration is in `dotfiles/`.
+
+## testing
+
+```
+docker build -t chrahunt/dotfiles .
+```

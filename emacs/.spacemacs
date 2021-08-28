@@ -28,7 +28,7 @@ This function should only modify configuration layer settings."
 
    ;; List of additional paths where to look for configuration layers.
    ;; Paths must have a trailing slash (i.e. `~/.mycontribs/')
-   dotspacemacs-configuration-layer-path '()
+   dotspacemacs-configuration-layer-path '("~/.emacs.d-private/")
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
@@ -519,7 +519,6 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
   (require 'org-drill)
-  (require 'ox-taskjuggler)
   ;; Do not save the list of packages, since packages and dependencies are
   ;; managed by spacemacs.
   (defun package--save-selected-packages (&rest opts) nil)
@@ -548,6 +547,13 @@ before packages are loaded."
 
   ;; Push any updates to auto-commited files automatically
   (setq-default gac-automatically-push-p t)
+  ;; When inserting attachments and screenshots in org-mode, they should
+  ;; also be added and auto-committed to the repository.
+  (setq-default gac-add-additional-flag "-A .")
+  ;; By default, git-auto-commit displays the result of executing git commit,
+  ;; which usually causes the minibuffer to flash and be multi-line.
+  ;; That's pretty intrusive, so I disable it.
+  (setq-default gac-silent-message-p t)
 
   ;; Auto-save org-mode files after emacs is idle for 10s
   (defun save-org-mode-files ()
@@ -750,6 +756,8 @@ are equal return t."
           (org-agenda-span 2)
           ;; Start week on today
           (org-agenda-start-on-weekday nil)
+          ;; No really, show the current day
+          (org-agenda-start-day nil)
           ;; Override the default prefix used for the item display on the agenda page.
           ;; Normally this will show the category, "notes:    ", as derived from the
           ;; filename, which is not useful here since all my tasks are in 1 file.
@@ -847,7 +855,9 @@ are equal return t."
   ;; the behavior.
   (setq evil-ex-search-interactive nil)
 
-  (setq org-export-backends '(ascii html latex md))
+  ;; Org export backends can be set either by setting this variable or importing specific
+  ;; ox- packages, not both.
+  (setq org-export-backends '(ascii html latex taskjuggler md))
 
   (defun chrahunt/org-agenda-goto-stbow-advice (args)
     (let ((buffer (car args))
@@ -911,7 +921,10 @@ x4Yl2M9eJskP8fIN\
     "Create an empty draw.io diagram as an attachment named {name}.drawio, and open it."
     (interactive "sCreate diagram named: ")
     (let ((attachment-name (chrahunt/create-attached-diagram name)))
-      (org-attach-open-link attachment-name)
+      (if (fboundp 'org-attach-open-link)
+          ;; org-attach-open-link was refactored in org 9.4, drop this when 9.3 is no longer relevant
+          (org-attach-open-link attachment-name)
+        (org-attach-follow attachment-name nil))
       attachment-name))
 
   (defun chrahunt/create-and-open-and-link-to-attached-diagram (name description)
@@ -923,6 +936,15 @@ link to it in the current file."
 
   ;; *i*nsert > *c*hart
   (spacemacs/set-leader-keys-for-major-mode 'org-mode "ic" #'chrahunt/create-and-open-and-link-to-attached-diagram)
+
+  ;; Open "idea://" links in IntelliJ.
+  (require 'ol)
+
+  (defun org-idea-open (path _)
+    (call-process "idea" nil 0 nil path))
+
+  (org-link-set-parameters "idea"
+                           :follow #'org-idea-open)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will

@@ -1,0 +1,13 @@
+#!/bin/sh
+if [ ! -f "$1" ]; then
+    echo "Usage: sysdig-inspect example.scap"
+    exit 1
+fi
+
+capture_path="$(readlink -f "$1")"
+
+echo "Starting container"
+# Reset entrypoint to avoid 60s wait unloading sysdig-probe.
+sudo docker run --rm -d -v "$capture_path:/tmp/capture.scap" -p8080:3000 --entrypoint "" sysdig/sysdig-inspect:latest node main.js
+
+echo "http://localhost:8080/#/capture/%2Ftmp%2Fcapture.scap/views/overview"
