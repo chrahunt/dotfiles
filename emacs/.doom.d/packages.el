@@ -86,3 +86,19 @@
 ;(unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
+
+;; Workarounds
+;; gitconfig-mode fails installation: https://github.com/hlissner/doom-emacs/issues/5667#issuecomment-948229579
+;; can be removed after updating doom to a version that includes
+;; https://github.com/hlissner/doom-emacs/pull/5665
+(package! gitconfig-mode
+      :recipe (:host github :repo "magit/git-modes"
+             :files ("gitconfig-mode.el")))
+(package! gitignore-mode
+      :recipe (:host github :repo "magit/git-modes"
+             :files ("gitignore-mode.el")))
+
+;; org-contrib's default host seems to have an expired certificate
+;; see https://github.com/hlissner/doom-emacs/issues/5655
+(package! org-contrib
+  :recipe (:host github :repo "emacsmirror/org-contrib"))
