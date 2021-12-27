@@ -56,7 +56,7 @@
         ;;   - header
         ;; - format
         ("t" "To Do" entry
-         (file+headline "" "tasks")
+         (file+olp "" "tasks")
          "* TODO %^{Description}
 :PROPERTIES:
 :CREATED: %U
@@ -67,7 +67,7 @@
 %a
 ")
         ("n" "Note" entry
-         (file+headline "" "notes")
+         (file+olp "" "notes")
          "* TODO %^{Title} :note:
 :PROPERTIES:
 :CREATED: %U
@@ -78,7 +78,7 @@
 %a
 ")
         ("i" "Interruption" entry
-         (file+headline "" "notes")
+         (file+olp "" "notes")
          "* %^{Title} :unsorted:interruption:
 :PROPERTIES:
 :CREATED: %U
