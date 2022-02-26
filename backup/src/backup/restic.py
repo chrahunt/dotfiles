@@ -47,7 +47,12 @@ class Restic:
         return subprocess.run(args, **kwargs)
 
     def backup(
-        self, paths: List[str], dry_run=False, snapshot_path: str = None, **kwargs
+        self,
+        paths: List[str],
+        dry_run=False,
+        snapshot_path: str = None,
+        host: str = None,
+        **kwargs
     ) -> subprocess.CompletedProcess:
         """
         :param paths: paths of files to back up
@@ -55,6 +60,8 @@ class Restic:
             are printed
         :param snapshot_path: path to use for snapshot identification (by default,
             restic uses a concatenation of all `paths`)
+        :param host: hostname to use in restic command, or `socket.gethostname()`
+            by default
         :param kwargs: passed to subprocess.run
         :return: completed restic backup process
         """
@@ -64,7 +71,11 @@ class Restic:
         # https://github.com/restic/restic/issues/2246
         # To avoid differences between the default Go hostname retrieval and Python,
         # we just always provide an explicit hostname.
-        args = self._host_args()
+        if host is None:
+            host = gethostname()
+
+        args = ["--host", host]
+
         if dry_run:
             args.append("--dry-run")
             # The --dry-run flag from https://github.com/restic/restic/pull/3300
@@ -80,9 +91,6 @@ class Restic:
         with escaped_paths(paths) as path_args:
             args.extend(path_args)
             return self.run(["backup", *args], **kwargs)
-
-    def _host_args(self) -> List[str]:
-        return ["--host", gethostname()]
 
     def need_init(self) -> bool:
         # https://github.com/restic/restic/issues/1690

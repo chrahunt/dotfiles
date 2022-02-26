@@ -22,6 +22,10 @@ on the command-line (`-f`). Configuration can be YAML or JSON, and can contain:
   produce a valid JSON object. The resulting key/value pairs are substituted
   into the values provided in `env`, using Python's format-string syntax. Any
   non-zero exit code fails the backup process.
+- `host` (string, optional): used for backup `--host` argument, which governs
+  parent snapshot detection. By default, this is set to `socket.gethostname()`.
+  You may want to set this explicitly if multiple hosts are attached to and
+  backing up the same device.
 - `options` (object, optional): contained key/value pairs are serialized into
   `-o k=v` and passed to `restic backup`
 - `env` (object, optional): key/value pairs used as the environment when

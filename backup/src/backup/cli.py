@@ -25,6 +25,8 @@ class Config(BaseModel):
     # Output of `env_command`, which is executed to get environment
     # variables used for running restic.
     env: Dict[str, str]
+    # Backup host field, used as part of snapshot metadata.
+    host: str
     # Directories to be excluded. Absolute paths are considered relative
     # to the base_directory, relative paths match any subdirectory (recursively).
     exclude_dirs: List[str] = []
@@ -47,7 +49,8 @@ def read_config(path: str) -> Config:
             f"Unsupported file type {config.suffix}"
         )
 
-    base_vars = {"hostname": gethostname()}
+    hostname = gethostname()
+    base_vars = {"hostname": hostname}
     try:
         env_command = data.pop("env_command")
     except KeyError:
@@ -73,6 +76,8 @@ def read_config(path: str) -> Config:
             raise RuntimeError(
                 f"env.{k} expects {e.args[0]}, but it is not available"
             )
+
+    data.setdefault("host", hostname)
 
     return Config(**data, env=env)
 
@@ -108,7 +113,12 @@ def backup(dry_run):
 
     logger.info("Starting backup")
     with statsd.timer("backup_time"):
-        restic.backup(files, snapshot_path=config.base_directory, dry_run=dry_run)
+        restic.backup(
+            files,
+            snapshot_path=config.base_directory,
+            dry_run=dry_run,
+            host=config.host,
+        )
 
     logger.info("Backup finished")
 
