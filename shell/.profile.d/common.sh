@@ -2,7 +2,7 @@
 # Common aliases/settings/functions
 # When sourced from .zprofile in emulate mode, this traces
 # "can't change option: vi", so don't do that.
-[ -z "$IN_ZPROFILE" ] && set -o vi
+[ -z "$ZSH_NAME" ] && set -o vi
 
 alias ..='cd ..'
 alias ...='cd .. && cd ..'
