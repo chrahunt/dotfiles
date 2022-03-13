@@ -9,8 +9,8 @@ from typing import Iterable, Iterator, List, Optional, Tuple
 
 import click
 
-DOTFILES_DIR = os.path.expanduser("~/.dotfiles.d")
-HOME = os.path.expanduser("~")
+HOME = Path.home().resolve()
+DOTFILES_DIR = HOME / ".dotfiles.d"
 
 
 @dataclass
