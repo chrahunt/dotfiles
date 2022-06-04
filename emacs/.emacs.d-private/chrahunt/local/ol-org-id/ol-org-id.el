@@ -15,7 +15,7 @@
 `org-id-open-links-in-same-buffer'."
   (setq-local org-id-open-links-in-same-buffer t))
 
-(defun ol-org-id--org-get-agenda-file-buffer-same-advice (buf)
+(defun ol-org-id--find-buffer-visiting-same-advice (buf)
   (let ((base-buf (buffer-base-buffer)))
     (if (eq base-buf buf)
         (current-buffer)
@@ -40,13 +40,13 @@ BODY.
          (advice-remove ,symbol-var ,function-var)))))
 
 (defun ol-org-id--org-id-find-in-same-buffer (id &optional markerp)
-  "`org-id-find' delegates to `org-get-agenda-file-buffer', which
-unconditionally retrieves a base buffer that contains the id. We customize the
+  "`org-id-find' delegates to `find-buffer-visiting', which
+retrieves the base buffer that contains the id. We customize the
 behavior by returning the current buffer if the retrieved base buffer is the
 same as this buffer's base."
-  (with-advice-added 'org-get-agenda-file-buffer
+  (with-advice-added 'find-buffer-visiting
                      :filter-return
-                     #'ol-org-id--org-get-agenda-file-buffer-same-advice
+                     #'ol-org-id--find-buffer-visiting-same-advice
     (org-id-find id markerp)))
 
 (defun ol-org-id--get-current-id-link ()
