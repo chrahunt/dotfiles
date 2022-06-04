@@ -157,7 +157,11 @@
    ;; an org-capture.
    org-id-link-to-org-use-id t
    ;; When an agenda view is created, split the current frame to accommodate it.
-   org-agenda-window-setup 'reorganize-frame)
+   org-agenda-window-setup 'reorganize-frame
+   ;; By default, when attaching a file to an outline node, the current node is only used
+   ;; if there are no parents with an ID set. I prefer to attach to the immediate node by
+   ;; default.
+   org-attach-use-inheritance nil)
 
   ;; Save org files after 10 seconds idle.
   (run-with-idle-timer 10 t #'chrahunt/save-all-org-buffers)
