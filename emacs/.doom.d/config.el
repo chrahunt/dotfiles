@@ -161,7 +161,11 @@
    ;; By default, when attaching a file to an outline node, the current node is only used
    ;; if there are no parents with an ID set. I prefer to attach to the immediate node by
    ;; default.
-   org-attach-use-inheritance nil)
+   org-attach-use-inheritance nil
+   ;; By default (in doom), this is set to t, which means the originating link gets
+   ;; stored on the recent links. With 'attached, the created file is what gets
+   ;; used. This is useful for the new attachment use case.
+   org-attach-store-link-p 'attached)
 
   ;; Save org files after 10 seconds idle.
   (run-with-idle-timer 10 t #'chrahunt/save-all-org-buffers)
@@ -189,10 +193,18 @@
   ;; This advice changes:
   ;; 1. By default, `org-attach-new' uses `find-file' to open the new file, which
   ;;    opens it in the current window. I prefer it to open in a new frame.
+  ;; 2. `org-attach-store-link-p' is used to determine what link to store (if any) when
+  ;;    attaching a file, but it is only respected for copy/move/link attachment operations.
+  ;;    I want it to store the link to the new file.
   (defadvice! chrahunt/org-attach-new (orig-fun file)
     :around #'org-attach-new
-    (with-advice-added 'find-file :override #'find-file-other-frame
-                       (funcall orig-fun file)))
+    (progn
+      (with-advice-added 'find-file :override #'find-file-other-frame
+                         (funcall orig-fun file))
+      (if (eq org-attach-store-link-p 'attached)
+        (let ((link-value (file-name-nondirectory file)))
+          (push (list (concat "attachment:" link-value) link-value)
+                org-stored-links)))))
 
   (map! :map org-mode-map
         :localleader
