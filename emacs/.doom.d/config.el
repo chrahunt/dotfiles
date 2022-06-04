@@ -181,6 +181,15 @@
     (ignore-errors
       (base64-decode-string link)))
 
+  ;; `org-attach-new' is the function invoked when attaching a new file (, a a n)
+  ;; This advice changes:
+  ;; 1. By default, `org-attach-new' uses `find-file' to open the new file, which
+  ;;    opens it in the current window. I prefer it to open in a new frame.
+  (defadvice! chrahunt/org-attach-new (orig-fun file)
+    :around #'org-attach-new
+    (with-advice-added 'find-file :override #'find-file-other-frame
+                       (funcall orig-fun file)))
+
   (map! :map org-mode-map
         :localleader
         ;; By default, this is mapped to `org-toggle-item'. spacemacs uses it
