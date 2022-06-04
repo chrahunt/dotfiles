@@ -43,6 +43,10 @@
 ;; when a search has been initiated! Just press Esc to pop off the transient map.
 (setq doom-localleader-key ",")
 
+;; My org notes are larger than the 10MB default, so this is increased to
+;; avoid a prompt on startup
+(setq large-file-warning-threshold 20000000)
+
 (setq chrahunt/org-capture-templates
       '(
         ;; Files default to org-default-notes-file
