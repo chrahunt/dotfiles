@@ -287,6 +287,21 @@
                      #'chrahunt/org-agenda-goto-stbow-advice
                      (apply oldfun args)))
 
+(defun chrahunt/reset-org-link-frame-setup ()
+  (push '(file . find-file) org-link-frame-setup))
+
+(defun chrahunt/org-open-at-point-other-frame ()
+  (interactive)
+  (let ((org-link-frame-setup (copy-alist org-link-frame-setup)))
+    (push '(file . find-file-other-frame) org-link-frame-setup)
+    ;;(setf (cdr (assoc 'file org-link-frame-setup)) 'find-file-other-frame)
+    ;; If, as part of opening, we clone an indirect buffer, then revert to our
+    ;; originally-set value since that indicates we're going through our custom
+    ;; id-based link handling.
+    (with-hook-added 'clone-indirect-buffer-hook
+                     #'chrahunt/reset-org-link-frame-setup
+      (call-interactively #'org-open-at-point-indirect-buffer-other-frame))))
+
 ;; Provide helpful org-id-based link navigation in indirect buffers
 (use-package! ol-org-id
   :after org
@@ -296,9 +311,9 @@
   ;; to S-click in web browsers.
   (map! :map org-mode-map
         ;; Terminal
-        "S-RET" #'org-open-at-point-indirect-buffer-other-frame
+        "S-RET" #'chrahunt/org-open-at-point-other-frame
         ;; GUI
-        "S-<return>" #'org-open-at-point-indirect-buffer-other-frame))
+        "S-<return>" #'chrahunt/org-open-at-point-other-frame))
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
