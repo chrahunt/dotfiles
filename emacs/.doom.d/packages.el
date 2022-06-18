@@ -17,6 +17,8 @@
 (package! jq-mode)
 ;; Spaced repetition in org mode
 (package! org-drill)
+;; QOL improvements for fcitx input
+(package! fcitx)
 
 ;; Local packages
 ;; For each of these, right now I'm directing to my spacemacs layer

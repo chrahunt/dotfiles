@@ -265,6 +265,15 @@
 ;; I use emacs mostly for org, and line numbers aren't as useful for me there.
 (setq display-line-numbers-type nil)
 
+;;
+;; Makes fcitx more aware of editors modes, like:
+;; - disables fcitx when in Evil normal mode
+;; - disables fcitx in minibuffer
+;; - others, see README in repo for details: https://github.com/cute-jumper/fcitx.el
+(use-package! fcitx
+  :config
+  (fcitx-aggressive-setup))
+
 ;; Here are some additional functions/macros that could help you configure Doom:
 ;;
 ;; - `load!' for loading external *.el files relative to this one

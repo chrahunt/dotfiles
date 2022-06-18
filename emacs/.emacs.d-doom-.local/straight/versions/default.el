@@ -50,6 +50,7 @@
  ("evil-visualstar" . "06c053d8f7381f91c53311b1234872ca96ced752")
  ("exato" . "aee7af7b7a0e7551478f453d1de7d5b9cb2e06c4")
  ("explain-pause-mode" . "2356c8c3639cbeeb9751744dbe737267849b4b51")
+ ("fcitx.el" . "12dc2638ddd15c8f6cfaecb20e1f428ab2bb5624")
  ("fd-dired" . "c223aee30af7dc7f52fb20045226ed9f49f4ec49")
  ("flycheck" . "21d52264aa80bfa4ede94c59e37a20fb6d033b0c")
  ("flycheck-cask" . "4b2ede6362ded4a45678dfbef1876faa42edbd58")
