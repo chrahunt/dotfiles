@@ -117,7 +117,13 @@
           ;; By default, tags are inherited. I don't use tag inheritance in my task
           ;; organization, so disabling them removes some clutter from the agenda
           ;; view itself.
-          (org-agenda-use-tag-inheritance nil)))))
+          (org-agenda-use-tag-inheritance nil)
+          ;; By default, org-agenda-list tries to check for blocked status of tasks,
+          ;; so they can have a different style (dimmed or invisible). The purpose of
+          ;; this agenda view is only to show actionable or scheduled items, so this
+          ;; isn't needed, and disabling it reduces agenda construction time to about
+          ;; 6s (from 16s).
+          (org-agenda-dim-blocked-tasks nil)))))
 
 (defun chrahunt/save-all-org-buffers ()
   (dolist (buf (buffer-list))
