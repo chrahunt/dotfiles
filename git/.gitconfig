@@ -11,13 +11,15 @@ c = commit
 co = checkout
 s = status
 d = diff
+r = rebase
 rc = "rebase --continue"
 fix = "commit --amend --no-edit"
-fixa = "commit -a --amend --no-edit"
+fixa = "!f() { git add -A && git commit --amend --no-edit; }; f"
 stash-diff = "!f() { git diff \"stash@{$1}^\" \"stash@{$1}\"; }; f"
 unstage = "reset HEAD --"
-pr = "!f() { git fetch upstream pull/$1/head:pr-$1; }; f"
 exclude = "!f() { printf \"%s\\n\" \"$@\" >> \"$(git rev-parse --git-common-dir)/info/exclude\"; }; f"
+main-branch = "!f() { git rev-parse --abbrev-ref origin/HEAD | cut -d/ -f2; }; f"
+review = "!f() { git log -p --reverse $(git main-branch)..; }; f"
 
 [color]
 ui = auto

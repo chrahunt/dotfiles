@@ -4,7 +4,7 @@
 " single file, so this file is meant for IDE-only configurations.
 "
 " Check https://youtrack.jetbrains.com/issue/VIM-1573 for updates.
-source ~/.vimrc
+"source ~/.vimrc
 
 " cscope-like binding to show all references of the symbol under
 " the cursor

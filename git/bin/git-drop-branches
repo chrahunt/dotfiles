@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+main_branch="$(git main-branch)"
+git checkout "$main_branch"
+git branch --merged | grep -v '^*' | xargs -n 1 git branch -d
