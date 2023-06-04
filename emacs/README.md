@@ -20,7 +20,7 @@ customized file and pull in any new parts.
 
 ## doom
 
-When the repository is initially cloned and deployed, start a new shell
+After the repository is initially cloned and deployed, start a new shell
 and run `doom install`.
 
 ### initialization
@@ -87,7 +87,15 @@ A basic org note will start with
 
 ## organization
 
-`.spacemacs` includes layer `chrahunt`, in which I have my configuration.
-
-Most of the package-specific settings are in `chrahunt/packages.el`,
-which calls out to functions in `chrahunt/funcs.el` as needed.
+- `.doom.d/`: my personal doom emacs configuration
+- `.emacs.d/`: (submodule) chemacs2 installation directory - permits switching out
+  emacs profiles (like spacemacs/doom) more easily
+- `.emacs.d-doom/`: (submodule) doom installation directory
+- `.emacs.d-doom-.local/`: doom's local cache and `straight.el`-generated lock file
+  get redirected to this folder - we only version control the lock file.
+- `.emacs.d-private/`: my common utilities that were bit enough/independent enough
+  to extract from my config.
+- `.emacs.d-spacemacs/`: (submodule) spacemacs installation directory
+- `.emacs-profiles.el`: configuration for chemacs2
+- `.profile.d/`: shell init overrides
+- `.spacemacs`: my personal spacemacs configuration (mostly deprecated)
