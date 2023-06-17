@@ -228,6 +228,17 @@
         (:prefix ("b" . "buffer")
          ("f" #'clone-indirect-buffer-other-frame))))
 
+;; Helper function for working with frames. It doesn't seem like
+;; frame operations get much attention in the default key bindings,
+;; so I set those up here, too.
+(use-package! frame-prefix
+  :config
+  (frame-prefix/register-frame-title-format)
+  (map! :leader
+        (:prefix ("F" . "frame")
+         ("p" #'frame-prefix/set)
+         ("r" #'frame-prefix/reset))))
+
 ;; These next 2 functions make `org-agenda-goto' use the buffer in the adjacent window (if its
 ;; base buffer contains the selected item) instead of changing the adjacent window to point to
 ;; the base buffer.
