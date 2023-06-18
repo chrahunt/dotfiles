@@ -17,6 +17,10 @@
 (package! jq-mode)
 ;; Spaced repetition in org mode
 (package! org-drill)
+;; QOL improvements for fcitx input
+(package! fcitx)
+;; Frame-local variables, used for frame renaming (for frame-prefix package)
+(package! frame-local)
 
 ;; Local packages
 ;; For each of these, right now I'm directing to my spacemacs layer
@@ -46,6 +50,11 @@
 (use-package org-in-buffer-capture-templates
   :defer
   :load-path "../.emacs.d-private/chrahunt/local/org-in-buffer-capture-templates")
+
+;; Frame title prefix functions
+(use-package frame-prefix
+  :defer
+  :load-path "../.emacs.d-private/chrahunt/local/frame-prefix")
 
 ;; To install a package directly from a remote git repo, you must specify a
 ;; `:recipe'. You'll find documentation on what `:recipe' accepts here:
@@ -86,3 +95,19 @@
 ;(unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
+
+;; Workarounds
+;; gitconfig-mode fails installation: https://github.com/hlissner/doom-emacs/issues/5667#issuecomment-948229579
+;; can be removed after updating doom to a version that includes
+;; https://github.com/hlissner/doom-emacs/pull/5665
+(package! gitconfig-mode
+      :recipe (:host github :repo "magit/git-modes"
+             :files ("gitconfig-mode.el")))
+(package! gitignore-mode
+      :recipe (:host github :repo "magit/git-modes"
+             :files ("gitignore-mode.el")))
+
+;; org-contrib's default host seems to have an expired certificate
+;; see https://github.com/hlissner/doom-emacs/issues/5655
+(package! org-contrib
+  :recipe (:host github :repo "emacsmirror/org-contrib"))

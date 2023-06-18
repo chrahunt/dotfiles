@@ -28,7 +28,14 @@ class Restic:
         self._env = env
         self._options = options or {}
 
-    def run(self, args, **kwargs) -> subprocess.CompletedProcess:
+    def run(self, args: List[str], **kwargs) -> subprocess.CompletedProcess:
+        """
+        Run restic, adding configured environment variables and options.
+
+        :param args: passed to subprocess.run (after options are populated)
+        :param kwargs: passed to subprocess.run (after `env` is enriched)
+        :return: completed restic process
+        """
         kwargs.setdefault("check", True)
 
         env = kwargs.pop("env", {})
@@ -39,15 +46,37 @@ class Restic:
         logger.debug("Running: %s", " ".join(shlex.quote(a) for a in args))
         return subprocess.run(args, **kwargs)
 
-    def backup(self, paths: List[str], **kwargs) -> subprocess.CompletedProcess:
+    def backup(
+        self,
+        paths: List[str],
+        dry_run=False,
+        snapshot_path: str = None,
+        host: str = None,
+        **kwargs
+    ) -> subprocess.CompletedProcess:
+        """
+        :param paths: paths of files to back up
+        :param dry_run: if true, then no backup is actually done, and files
+            are printed
+        :param snapshot_path: path to use for snapshot identification (by default,
+            restic uses a concatenation of all `paths`)
+        :param host: hostname to use in restic command, or `socket.gethostname()`
+            by default
+        :param kwargs: passed to subprocess.run
+        :return: completed restic backup process
+        """
         # In order to avoid a re-scan, we need to provide an explicit parent
         # snapshot. In order to filter the parent we need to know the user and
         # host from which we're running (assume 1 backup source for now).
         # https://github.com/restic/restic/issues/2246
         # To avoid differences between the default Go hostname retrieval and Python,
         # we just always provide an explicit hostname.
-        args = self._host_args()
-        if kwargs.pop("dry_run", False):
+        if host is None:
+            host = gethostname()
+
+        args = ["--host", host]
+
+        if dry_run:
             args.append("--dry-run")
             # The --dry-run flag from https://github.com/restic/restic/pull/3300
             # doesn't show the files backed up unless verbose logging is enabled
@@ -55,18 +84,13 @@ class Restic:
             args.append("-vv")
             # Testing json log output.
             args.append("--json")
-        try:
-            snapshot_path = kwargs.pop("snapshot_path")
-        except KeyError:
-            pass
-        else:
+
+        if snapshot_path is not None:
             args.extend(["--set-path", snapshot_path])
+
         with escaped_paths(paths) as path_args:
             args.extend(path_args)
             return self.run(["backup", *args], **kwargs)
-
-    def _host_args(self) -> List[str]:
-        return ["--host", gethostname()]
 
     def need_init(self) -> bool:
         # https://github.com/restic/restic/issues/1690

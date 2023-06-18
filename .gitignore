@@ -5,3 +5,4 @@
 /.nox/
 __pycache__/
 /.mypy_cache/
+*.iml
