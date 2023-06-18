@@ -68,6 +68,41 @@ doom thaw-packages
 doom sync
 ```
 
+#### troubleshooting
+
+##### Certificate verification failed
+
+Error will say "The package manager threw an error", and the latest error output is something like
+
+```
+$ git fetch origin
+fatal: unable to access 'https://package.org/git-repo-url': server certificate verification failed. CAfile: /etc/ssl/certs/ca-certificates.crt CRLfile: none
+```
+
+To mitigate, update system CA certificates package and try again.
+
+For example, to update on Ubuntu: `apt install ca-certificates`
+
+##### Failed to get unambiguous name
+
+If the main branch name has been changed for a repo that's already cloned (as
+of the version of straight.el I'm using), then `doom thaw-packages` may emit an
+error like
+
+```
+In repository "repo-name", failed to get status:
+
+Failed to get unambiguous name for "main"
+fatal: Needed a single revision
+```
+
+When this happens, abort (respond to the prompt with 1), then navigate to
+`~/.emacs.d-doom-.local/straight/repos` and move the existing repository folder
+to a different directory, like `mv repo-name repo-name.old` and rerun `doom
+thaw-packages`
+
+May be related to https://github.com/radian-software/straight.el/issues/922
+
 ### upgrading packages
 
 ```
